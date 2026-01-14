@@ -199,7 +199,7 @@
             // Generate initial secure key
             const encryptionKey = document.getElementById('encryptionKey');
             if (encryptionKey) {
-                const randomKey = "CipherKey-" + Math.random().toString(36).substring(2, 12);
+                const randomKey = "";
                 encryptionKey.value = randomKey;
                 updateKeyMetrics(randomKey);
             }
