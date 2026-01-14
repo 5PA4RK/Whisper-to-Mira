@@ -51,7 +51,7 @@
             <section class="key-section card">
                 <div class="section-header">
                     <h2><i class="fas fa-key"></i> Encryption Key</h2>
-                    <button class="btn-icon" onclick="toggleKeyVisibility()" title="Show/Hide Key">
+                    <button class="btn-icon" id="toggleKeyVisibility" title="Show/Hide Key">
                         <i class="fas fa-eye" id="keyVisibilityIcon"></i>
                     </button>
                 </div>
@@ -61,7 +61,7 @@
                         id="encryptionKey" 
                         class="key-input"
                         placeholder="Enter your encryption key...">
-                    <button class="btn-generate" onclick="generateKey()">
+                    <button class="btn-generate" id="generateKeyBtn">
                         <i class="fas fa-sync-alt"></i> Generate
                     </button>
                 </div>
@@ -83,19 +83,19 @@
             <!-- Action Buttons -->
             <section class="action-section">
                 <div class="btn-group">
-                    <button class="btn-action btn-encrypt" onclick="encryptText()">
+                    <button class="btn-action btn-encrypt" id="encryptBtn">
                         <i class="fas fa-lock"></i>
                         <span>Encrypt</span>
                     </button>
-                    <button class="btn-action btn-decrypt" onclick="decryptText()">
+                    <button class="btn-action btn-decrypt" id="decryptBtn">
                         <i class="fas fa-unlock"></i>
                         <span>Decrypt</span>
                     </button>
-                    <button class="btn-action btn-clear" onclick="clearAll()">
+                    <button class="btn-action btn-clear" id="clearBtn">
                         <i class="fas fa-broom"></i>
                         <span>Clear All</span>
                     </button>
-                    <button class="btn-action btn-sample" onclick="loadSample()">
+                    <button class="btn-action btn-sample" id="sampleBtn">
                         <i class="fas fa-vial"></i>
                         <span>Load Sample</span>
                     </button>
@@ -106,7 +106,7 @@
             <section class="results-section card">
                 <div class="section-header">
                     <h2><i class="fas fa-code"></i> Results</h2>
-                    <button class="btn-copy" onclick="copyResult()" title="Copy to clipboard">
+                    <button class="btn-copy" id="copyResultBtn" title="Copy to clipboard">
                         <i class="fas fa-copy"></i> Copy
                     </button>
                 </div>
@@ -183,302 +183,7 @@
         </footer>
     </div>
 
-    <!-- JavaScript -->
-    <script>
-        // Initialize app when DOM is loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeApp();
-            setupEventListeners();
-        });
-
-        function initializeApp() {
-            // Clear input text
-            const inputText = document.getElementById('inputText');
-            if (inputText) inputText.value = "";
-            
-            // Generate initial secure key
-            const encryptionKey = document.getElementById('encryptionKey');
-            if (encryptionKey) {
-                const randomKey = "";
-                encryptionKey.value = randomKey;
-                updateKeyMetrics(randomKey);
-            }
-            
-            // Clear result area
-            const result = document.getElementById('result');
-            if (result) {
-                result.innerHTML = `
-                    <div class="placeholder">
-                        <i class="fas fa-arrow-up"></i>
-                        <p>Encrypted or decrypted results will appear here</p>
-                    </div>
-                `;
-            }
-            
-            // Update status
-            updateStatus('App initialized. Ready for secure encryption.', 'success');
-            
-            // Update character count
-            updateCharCount();
-        }
-
-        function setupEventListeners() {
-            const inputText = document.getElementById('inputText');
-            const encryptionKey = document.getElementById('encryptionKey');
-            
-            if (inputText) {
-                inputText.addEventListener('input', updateCharCount);
-            }
-            
-            if (encryptionKey) {
-                encryptionKey.addEventListener('input', function() {
-                    updateKeyMetrics(this.value);
-                });
-            }
-        }
-
-        function updateCharCount() {
-            const inputText = document.getElementById('inputText');
-            const charCount = document.getElementById('charCount');
-            if (inputText && charCount) {
-                charCount.textContent = inputText.value.length;
-            }
-        }
-
-        function updateKeyMetrics(key) {
-            const keyLength = document.getElementById('keyLength');
-            const strengthBar = document.getElementById('strengthBar');
-            const strengthText = document.getElementById('strengthText');
-            
-            if (keyLength) keyLength.textContent = key.length;
-            
-            if (strengthBar && strengthText) {
-                let strength = 0;
-                let text = "Very Weak";
-                let color = "#ef4444";
-                
-                if (key.length >= 32) {
-                    strength = 100;
-                    text = "Excellent";
-                    color = "#10b981";
-                } else if (key.length >= 24) {
-                    strength = 75;
-                    text = "Strong";
-                    color = "#22c55e";
-                } else if (key.length >= 16) {
-                    strength = 50;
-                    text = "Good";
-                    color = "#eab308";
-                } else if (key.length >= 8) {
-                    strength = 25;
-                    text = "Weak";
-                    color = "#f97316";
-                }
-                
-                strengthBar.style.width = `${strength}%`;
-                strengthBar.style.backgroundColor = color;
-                strengthText.textContent = text;
-                strengthText.style.color = color;
-            }
-        }
-
-        function toggleKeyVisibility() {
-            const keyInput = document.getElementById('encryptionKey');
-            const icon = document.getElementById('keyVisibilityIcon');
-            
-            if (keyInput.type === 'password') {
-                keyInput.type = 'text';
-                icon.className = 'fas fa-eye-slash';
-            } else {
-                keyInput.type = 'password';
-                icon.className = 'fas fa-eye';
-            }
-        }
-
-        function generateKey() {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,.<>?';
-            let key = 'CipherKey-';
-            
-            for (let i = 0; i < 24; i++) {
-                key += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            
-            const encryptionKey = document.getElementById('encryptionKey');
-            encryptionKey.value = key;
-            updateKeyMetrics(key);
-            
-            // Animation effect
-            const btn = document.querySelector('.btn-generate');
-            btn.classList.add('generating');
-            setTimeout(() => btn.classList.remove('generating'), 300);
-            
-            updateStatus('New encryption key generated successfully', 'success');
-        }
-
-        function encryptText() {
-            const input = document.getElementById('inputText').value;
-            const key = document.getElementById('encryptionKey').value;
-            const startTime = performance.now();
-            
-            if (!input.trim()) {
-                updateStatus('Please enter text to encrypt', 'error');
-                return;
-            }
-            
-            if (!key.trim()) {
-                updateStatus('Please enter an encryption key', 'error');
-                return;
-            }
-            
-            // Simple encryption for demo
-            let encrypted = '';
-            for (let i = 0; i < input.length; i++) {
-                const charCode = input.charCodeAt(i) ^ key.charCodeAt(i % key.length);
-                encrypted += String.fromCharCode(charCode);
-            }
-            
-            const encodedResult = btoa(encrypted);
-            const endTime = performance.now();
-            
-            displayResult(encodedResult, 'encrypted');
-            updateProcessTime(endTime - startTime);
-            updateStatus('Text encrypted successfully', 'success');
-        }
-
-        function decryptText() {
-            const input = document.getElementById('inputText').value;
-            const key = document.getElementById('encryptionKey').value;
-            const startTime = performance.now();
-            
-            if (!input.trim()) {
-                updateStatus('Please enter text to decrypt', 'error');
-                return;
-            }
-            
-            if (!key.trim()) {
-                updateStatus('Please enter an encryption key', 'error');
-                return;
-            }
-            
-            try {
-                const decodedInput = atob(input);
-                let decrypted = '';
-                
-                for (let i = 0; i < decodedInput.length; i++) {
-                    const charCode = decodedInput.charCodeAt(i) ^ key.charCodeAt(i % key.length);
-                    decrypted += String.fromCharCode(charCode);
-                }
-                
-                const endTime = performance.now();
-                displayResult(decrypted, 'decrypted');
-                updateProcessTime(endTime - startTime);
-                updateStatus('Text decrypted successfully', 'success');
-            } catch (e) {
-                updateStatus('Decryption failed: Invalid encrypted text', 'error');
-            }
-        }
-
-        function displayResult(text, type) {
-            const result = document.getElementById('result');
-            const outputLength = document.getElementById('outputLength');
-            
-            result.innerHTML = `
-                <div class="result-content ${type}">
-                    <div class="result-type">
-                        <i class="fas fa-${type === 'encrypted' ? 'lock' : 'unlock'}"></i>
-                        ${type === 'encrypted' ? 'Encrypted Text' : 'Decrypted Text'}
-                    </div>
-                    <pre class="result-text">${text}</pre>
-                </div>
-            `;
-            
-            if (outputLength) outputLength.textContent = text.length;
-        }
-
-        function updateProcessTime(time) {
-            const processTime = document.getElementById('processTime');
-            if (processTime) {
-                processTime.textContent = Math.round(time);
-            }
-        }
-
-        function clearAll() {
-            document.getElementById('inputText').value = '';
-            document.getElementById('encryptionKey').value = '';
-            document.getElementById('result').innerHTML = `
-                <div class="placeholder">
-                    <i class="fas fa-arrow-up"></i>
-                    <p>Encrypted or decrypted results will appear here</p>
-                </div>
-            `;
-            
-            updateCharCount();
-            updateStatus('All fields cleared', 'info');
-            
-            // Re-initialize with new key
-            setTimeout(() => {
-                const randomKey = "CipherKey-" + Math.random().toString(36).substring(2, 12);
-                document.getElementById('encryptionKey').value = randomKey;
-                updateKeyMetrics(randomKey);
-            }, 100);
-        }
-
-        function loadSample() {
-            const sampleText = "This is a sample secret message that demonstrates the encryption capabilities of CipherGuard. Try encrypting this text with your key!";
-            document.getElementById('inputText').value = sampleText;
-            updateCharCount();
-            updateStatus('Sample text loaded', 'info');
-        }
-
-        function copyResult() {
-            const result = document.getElementById('result');
-            const resultText = result.querySelector('.result-text');
-            
-            if (resultText) {
-                navigator.clipboard.writeText(resultText.textContent)
-                    .then(() => {
-                        const btn = document.querySelector('.btn-copy');
-                        btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-                        btn.classList.add('copied');
-                        
-                        setTimeout(() => {
-                            btn.innerHTML = '<i class="fas fa-copy"></i> Copy';
-                            btn.classList.remove('copied');
-                        }, 2000);
-                        
-                        updateStatus('Result copied to clipboard', 'success');
-                    })
-                    .catch(err => {
-                        updateStatus('Failed to copy: ' + err, 'error');
-                    });
-            }
-        }
-
-        function updateStatus(message, type) {
-            const status = document.getElementById('status');
-            const statusText = status.querySelector('.status-text');
-            const statusIcon = status.querySelector('.status-icon');
-            const indicator = status.querySelector('.status-indicator');
-            
-            statusText.textContent = message;
-            
-            // Update icon and color based on type
-            const types = {
-                success: { icon: 'fa-check-circle', color: '#10b981' },
-                error: { icon: 'fa-exclamation-circle', color: '#ef4444' },
-                info: { icon: 'fa-info-circle', color: '#3b82f6' },
-                warning: { icon: 'fa-exclamation-triangle', color: '#f59e0b' }
-            };
-            
-            if (types[type]) {
-                statusIcon.className = `fas ${types[type].icon}`;
-                indicator.style.backgroundColor = types[type].color;
-            }
-            
-            // Add animation
-            status.classList.add('updated');
-            setTimeout(() => status.classList.remove('updated'), 500);
-        }
-    </script>
+    <!-- JavaScript Files -->
+    <script src="app.js"></script>
 </body>
 </html>
