@@ -9,31 +9,31 @@
     --warning: #f59e0b;
     --error: #ef4444;
     --info: #3b82f6;
-    
+
     /* Backgrounds */
     --bg-primary: #0f172a;
     --bg-secondary: #1e293b;
     --bg-tertiary: #334155;
-    --bg-card: rgba(30, 41, 59, 0.8);
+    --bg-card: rgba(30, 41, 59, 0.9);
     --bg-input: rgba(51, 65, 85, 0.6);
-    
+
     /* Text */
     --text-primary: #f8fafc;
     --text-secondary: #cbd5e1;
     --text-muted: #94a3b8;
-    
-    /* Borders */
-    --border-color: rgba(148, 163, 184, 0.1);
+
+    /* Borders & Radius */
+    --border-color: rgba(148, 163, 184, 0.2);
     --border-radius: 16px;
     --border-radius-sm: 8px;
     --border-radius-lg: 24px;
-    
-    /* Shadows */
+
+    /* Shadows & Effects */
     --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
     --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.2);
     --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.3);
     --glow: 0 0 20px rgba(99, 102, 241, 0.2);
-    
+
     /* Transitions */
     --transition-fast: 0.2s ease;
     --transition-normal: 0.3s ease;
@@ -57,17 +57,21 @@ body {
     background-image: 
         radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 20%),
         radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 20%);
+    transition: background 0.3s ease;
 }
 
+/* Container */
 .container {
     max-width: 1200px;
     margin: 0 auto;
+    padding: 0 15px;
 }
 
 /* ===== Typography ===== */
 h1, h2, h3, h4 {
     font-weight: 600;
     line-height: 1.2;
+    margin-bottom: 10px;
 }
 
 h1 {
@@ -78,18 +82,19 @@ h1 {
 }
 
 h2 {
-    font-size: 1.5rem;
+    font-size: 1.75rem;
     color: var(--text-primary);
 }
 
 h3 {
-    font-size: 1.25rem;
+    font-size: 1.3rem;
     color: var(--text-primary);
 }
 
 h4 {
     font-size: 1rem;
     color: var(--text-secondary);
+    margin-bottom: 8px;
 }
 
 /* ===== Header ===== */
@@ -116,6 +121,12 @@ h4 {
     background: rgba(99, 102, 241, 0.1);
     padding: 20px;
     border-radius: 50%;
+    transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.logo i:hover {
+    background: rgba(99, 102, 241, 0.2);
+    transform: scale(1.05);
 }
 
 .tagline {
@@ -137,15 +148,13 @@ h4 {
     box-shadow: var(--shadow-md);
     position: relative;
     overflow: hidden;
+    transition: box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
 .status-panel::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
+    top: 0; left: 0; right: 0; height: 3px;
     background: linear-gradient(90deg, var(--primary), var(--secondary));
 }
 
@@ -153,11 +162,13 @@ h4 {
     display: flex;
     align-items: center;
     gap: 15px;
+    z-index: 1;
 }
 
 .status-icon {
     font-size: 1.5rem;
     color: var(--success);
+    transition: color 0.3s ease;
 }
 
 .status-text {
@@ -202,13 +213,16 @@ h4 {
     box-shadow: var(--shadow-md);
     backdrop-filter: blur(10px);
     margin-bottom: 25px;
+    transition: box-shadow 0.3s ease, border-color 0.3s ease, background 0.3s ease;
 }
 
 .card:hover {
     box-shadow: var(--shadow-lg);
     border-color: rgba(99, 102, 241, 0.3);
+    background: rgba(30, 41, 59, 1);
 }
 
+/* ===== Section Header ===== */
 .section-header {
     display: flex;
     align-items: center;
@@ -220,6 +234,8 @@ h4 {
     display: flex;
     align-items: center;
     gap: 12px;
+    font-size: 1.4rem;
+    font-weight: 600;
 }
 
 .section-header h2 i {
@@ -236,7 +252,7 @@ h4 {
     color: var(--text-primary);
     font-family: 'JetBrains Mono', monospace;
     font-size: 1rem;
-    transition: var(--transition-normal);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
     resize: vertical;
 }
 
@@ -257,6 +273,7 @@ h4 {
     display: flex;
     gap: 15px;
     margin-bottom: 20px;
+    flex-wrap: wrap;
 }
 
 .key-input {
@@ -272,7 +289,7 @@ h4 {
     cursor: pointer;
     padding: 8px;
     border-radius: var(--border-radius-sm);
-    transition: var(--transition-fast);
+    transition: color 0.3s ease, background 0.3s ease;
 }
 
 .btn-icon:hover {
@@ -291,7 +308,7 @@ h4 {
     display: flex;
     align-items: center;
     gap: 8px;
-    transition: var(--transition-normal);
+    transition: all 0.3s ease;
 }
 
 .btn-generate:hover {
@@ -300,7 +317,7 @@ h4 {
 }
 
 .btn-generate.generating i {
-    animation: spin 0.5s ease;
+    animation: spin 0.5s linear infinite;
 }
 
 @keyframes spin {
@@ -317,6 +334,7 @@ h4 {
     padding: 15px;
     background: rgba(0, 0, 0, 0.2);
     border-radius: var(--border-radius-sm);
+    transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .key-strength {
@@ -342,7 +360,8 @@ h4 {
     height: 100%;
     width: 0%;
     border-radius: 4px;
-    transition: var(--transition-normal);
+    transition: width 0.3s ease;
+    background: linear-gradient(90deg, #34d399, #3b82f6); /* Improved gradient for strength */
 }
 
 .strength-text {
@@ -380,7 +399,7 @@ h4 {
     font-size: 1.1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: var(--transition-normal);
+    transition: all 0.3s ease;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -391,22 +410,22 @@ h4 {
 
 .btn-encrypt {
     background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    color: white;
+    color: #fff;
 }
 
 .btn-decrypt {
     background: linear-gradient(135deg, var(--secondary), #7c3aed);
-    color: white;
+    color: #fff;
 }
 
 .btn-clear {
     background: linear-gradient(135deg, #64748b, #475569);
-    color: white;
+    color: #fff;
 }
 
 .btn-sample {
     background: linear-gradient(135deg, var(--info), #2563eb);
-    color: white;
+    color: #fff;
 }
 
 .btn-action:hover {
@@ -430,17 +449,17 @@ h4 {
     display: flex;
     align-items: center;
     gap: 8px;
-    transition: var(--transition-normal);
+    transition: all 0.3s ease;
 }
 
 .btn-copy:hover {
     background: var(--primary);
-    color: white;
+    color: #fff;
 }
 
 .btn-copy.copied {
     background: var(--success);
-    color: white;
+    color: #fff;
 }
 
 .result-output {
@@ -450,6 +469,7 @@ h4 {
     padding: 25px;
     margin: 20px 0;
     overflow: auto;
+    transition: background 0.3s ease;
 }
 
 .placeholder {
@@ -472,6 +492,11 @@ h4 {
     padding: 20px;
     border-radius: var(--border-radius-sm);
     background: rgba(0, 0, 0, 0.2);
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-primary);
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.5;
 }
 
 .result-content.encrypted {
@@ -495,7 +520,7 @@ h4 {
     font-family: 'JetBrains Mono', monospace;
     color: var(--text-primary);
     white-space: pre-wrap;
-    word-break: break-all;
+    word-break: break-word;
     line-height: 1.5;
     font-size: 0.95rem;
 }
@@ -544,7 +569,7 @@ h4 {
     padding: 20px;
     background: rgba(0, 0, 0, 0.2);
     border-radius: var(--border-radius-sm);
-    transition: var(--transition-normal);
+    transition: all 0.3s ease;
 }
 
 .feature:hover {
@@ -625,7 +650,7 @@ h4 {
 .footer-link {
     color: var(--text-muted);
     text-decoration: none;
-    transition: var(--transition-fast);
+    transition: color 0.3s ease;
 }
 
 .footer-link:hover {
@@ -650,78 +675,63 @@ h4 {
 }
 
 /* ===== Responsive Design ===== */
-@media (max-width: 768px) {
+@media(max-width: 768px){
     .container {
         padding: 0 10px;
     }
-    
     h1 {
         font-size: 2rem;
     }
-    
     .logo i {
         font-size: 2.5rem;
         padding: 15px;
     }
-    
     .btn-group {
         grid-template-columns: 1fr;
     }
-    
     .key-input-group {
         flex-direction: column;
     }
-    
     .btn-generate {
         width: 100%;
         justify-content: center;
     }
-    
     .key-info {
         flex-direction: column;
         gap: 15px;
         align-items: flex-start;
     }
-    
     .security-features {
         grid-template-columns: 1fr;
     }
-    
     .card {
         padding: 20px;
     }
-    
     .result-meta {
         flex-direction: column;
         gap: 10px;
     }
-    
     .footer-links {
         flex-direction: column;
         gap: 15px;
         text-align: center;
     }
 }
-
-@media (max-width: 480px) {
+@media(max-width: 480px){
     body {
         padding: 10px;
     }
-    
     .app-header {
         margin-bottom: 20px;
     }
-    
     .header-content {
         padding: 20px 0;
     }
-    
     .status-panel {
         flex-direction: column;
         align-items: flex-start;
         gap: 15px;
     }
-    
     .status-indicator {
         position: absolute;
         top: 20px;
