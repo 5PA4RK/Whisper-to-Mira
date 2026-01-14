@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -25,14 +26,14 @@
         <main class="main-content">
             <div class="card">
                 <div class="card-header">
-                    <h2><i class="fas fa-edit"></i> Text Encryption & Decryption</h2>
+                    <h2><i class="fas fa-edit"></i> Text Encryption Or Decryption</h2>
                 </div>
                 
                 <div class="card-body">
                     <div class="form-section">
                         <div class="form-group">
                             <label for="inputText" class="form-label">
-                                <i class="fas fa-font"></i> Text to Process
+                                <i class="fas fa-font"></i> Enter Your Text
                             </label>
                             <textarea 
                                 id="inputText" 
@@ -46,12 +47,17 @@
                             <label for="encryptionKey" class="form-label">
                                 <i class="fas fa-key"></i> Encryption Key
                             </label>
-                            <input 
-                                type="text" 
-                                id="encryptionKey" 
-                                placeholder="Enter a secure key or press to generate one..."
-                                class="form-input"
-                            >
+                            <div class="key-input-container">
+                                <input 
+                                    type="password" 
+                                    id="encryptionKey" 
+                                    placeholder="Enter a secure key or click 'Generate Secure Key'..."
+                                    class="form-input"
+                                >
+                                <button type="button" class="toggle-key-btn" onclick="toggleKeyVisibility()" title="Show/Hide Key">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
                             <div class="key-info">
                                 <small class="key-hint">Click "Generate Secure Key" or use your own</small>
                                 <span id="keyStrength" class="key-strength">Auto-generated</span>
