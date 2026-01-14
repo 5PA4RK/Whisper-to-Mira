@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Set initial values
     if (inputText) inputText.value = "";
-    if (encryptionKey) encryptionKey.value = "Write a Key or Generate One";
+    if (encryptionKey) encryptionKey.value = "";
     if (statusDiv) statusDiv.textContent = "✅ App ready! Click 'Generate Key' or 'Encrypt' to start.";
     
     console.log("App initialized successfully!");
