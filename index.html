@@ -3,151 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Whisper to Mira</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Secure Encryption App</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Minimal inline CSS to ensure basic styling works */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #1a1a2e; color: #e6e6e6; min-height: 100vh; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 30px; padding: 20px; }
+        h1 { color: #6c63ff; font-size: 2.5rem; margin-bottom: 10px; }
+        .panel { background: rgba(30, 30, 46, 0.8); border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+        textarea, input { width: 100%; padding: 10px; margin: 10px 0; background: #2d2d44; border: 1px solid #444; color: white; border-radius: 5px; }
+        button { background: #6c63ff; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #5a52e0; }
+        #status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: rgba(46, 204, 113, 0.2); color: #2ecc71; }
+        .error { background: rgba(231, 76, 60, 0.2); color: #e74c3c; }
+    </style>
+    <!-- Fallback if external CSS fails -->
+    <link rel="stylesheet" href="styles.css" onerror="console.log('External CSS failed to load, using inline styles')">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1><i class="fas fa-shield-alt"></i> Whisper to Mira </h1>
-            <p class="subtitle">Secured Encryption for your Messages</p>
+            <h1><i class="fas fa-shield-alt"></i> Secure Encryption App</h1>
+            <p>Client-side encryption with Supabase storage</p>
         </header>
         
-        <div class="app-container">
-            <!-- Encryption Panel -->
-            <div class="panel">
-                <div class="panel-header">
-                    <i class="fas fa-lock"></i>
-                    <h2>Local Encryption</h2>
-                </div>
-                
-                <div class="input-group">
-                    <label for="inputText">Text to encrypt:</label>
-                    <textarea id="inputText" placeholder="Enter sensitive data to encrypt...">Confidential business data should be encrypted before storage.</textarea>
-                </div>
-                
-                <div class="input-group">
-                    <label for="encryptionKey">Encryption Key (NEVER sent to server):</label>
-                    <div class="key-container">
-                        <input type="password" id="encryptionKey" placeholder="Enter a strong password">
-                        <button class="btn-generate" id="generateKey">
-                            <i class="fas fa-key"></i> Generate
-                        </button>
-                    </div>
-                    <small class="helper-text">This key never leaves your browser</small>
-                </div>
-                
-                <div class="action-buttons">
-                    <button class="btn-encrypt" id="encryptBtn">
-                        <i class="fas fa-lock"></i> Encrypt Locally
-                    </button>
-                    <button class="btn-decrypt" id="decryptBtn">
-                        <i class="fas fa-unlock"></i> Decrypt Locally
-                    </button>
-                </div>
-                
-                <div class="input-group">
-                    <label>Encrypted Result (Safe for Supabase):</label>
-                    <div class="result-box" id="encryptedResult">
-                        Encrypted data will appear here...
-                    </div>
-                </div>
-                
-                <div class="info-box">
-                    <h3><i class="fas fa-info-circle"></i> Encryption Process</h3>
-                    <p>1. Data encrypted with AES-GCM-256 in your browser<br>
-                       2. Only encrypted data is sent to Supabase<br>
-                       3. Supabase stores encrypted data (cannot read it)<br>
-                       4. Retrieve and decrypt data locally with your key</p>
-                </div>
+        <div id="status">Loading app...</div>
+        
+        <div class="panel">
+            <h2><i class="fas fa-lock"></i> Encryption</h2>
+            <textarea id="inputText" rows="4" placeholder="Enter text to encrypt...">Test confidential data</textarea>
+            
+            <input type="password" id="encryptionKey" placeholder="Encryption key" value="MySecureKey123">
+            <button onclick="generateKey()"><i class="fas fa-key"></i> Generate Key</button>
+            
+            <div>
+                <button onclick="encryptText()" id="encryptBtn"><i class="fas fa-lock"></i> Encrypt</button>
+                <button onclick="decryptText()" id="decryptBtn"><i class="fas fa-unlock"></i> Decrypt</button>
             </div>
             
-            <!-- Supabase Storage Panel -->
-            <div class="panel">
-                <div class="panel-header">
-                    <i class="fas fa-database"></i>
-                    <h2>Supabase Storage</h2>
-                </div>
-                
-                <div class="server-config">
-                    <h3><i class="fas fa-cog"></i> Configuration</h3>
-                    <div class="input-group">
-                        <label for="dataId">Data Identifier:</label>
-                        <div class="key-container">
-                            <input type="text" id="dataId" placeholder="unique-data-id">
-                            <button class="btn-generate" id="generateDataId">
-                                <i class="fas fa-hashtag"></i> Generate
-                            </button>
-                        </div>
-                        <small class="helper-text">Used to retrieve data from Supabase</small>
-                    </div>
-                    
-                    <div class="input-group">
-                        <label for="dataDescription">Description (optional):</label>
-                        <input type="text" id="dataDescription" placeholder="Brief description of this encrypted data">
-                    </div>
-                </div>
-                
-                <div class="action-buttons">
-                    <button class="btn-save" id="saveToSupabase">
-                        <i class="fas fa-cloud-upload-alt"></i> Save to Supabase
-                    </button>
-                    <button class="btn-load" id="loadFromSupabase">
-                        <i class="fas fa-cloud-download-alt"></i> Load from Supabase
-                    </button>
-                    <button class="btn-list" id="listFromSupabase">
-                        <i class="fas fa-list"></i> List My Data
-                    </button>
-                </div>
-                
-                <div class="input-group">
-                    <label>Supabase Response:</label>
-                    <div class="result-box" id="supabaseResponse">
-                        Server messages will appear here...
-                    </div>
-                </div>
-                
-                <div class="input-group">
-                    <label>Decrypted Result (from Supabase):</label>
-                    <div class="result-box" id="decryptedResult">
-                        Decrypted data will appear here...
-                    </div>
-                </div>
-                
-                <div class="security-warning">
-                    <h3><i class="fas fa-exclamation-triangle"></i> Security Notes</h3>
-                    <p>• Encryption key stays in your browser<br>
-                       • Supabase only stores encrypted data<br>
-                       • Data IDs should not reveal sensitive info<br>
-                       • Use different keys for different data sets</p>
-                </div>
+            <div id="encryptedResult" style="background: #2d2d44; padding: 15px; border-radius: 5px; margin-top: 15px; min-height: 50px; font-family: monospace;">
+                Encrypted data will appear here...
             </div>
         </div>
         
-        <!-- Data Listing Modal -->
-        <div class="modal" id="dataListModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2><i class="fas fa-database"></i> Your Encrypted Data on Supabase</h2>
-                    <button class="close-modal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div id="dataList"></div>
-                </div>
+        <div class="panel">
+            <h2><i class="fas fa-database"></i> Supabase Storage</h2>
+            <input type="text" id="dataId" placeholder="Data ID" value="test-data-1">
+            <input type="text" id="dataDescription" placeholder="Description (optional)">
+            
+            <div>
+                <button onclick="saveToSupabase()" id="saveBtn"><i class="fas fa-save"></i> Save to Supabase</button>
+                <button onclick="loadFromSupabase()" id="loadBtn"><i class="fas fa-download"></i> Load from Supabase</button>
+                <button onclick="clearData()"><i class="fas fa-trash"></i> Clear</button>
+            </div>
+            
+            <div id="supabaseResponse" style="background: #2d2d44; padding: 15px; border-radius: 5px; margin-top: 15px; min-height: 50px;">
+                Supabase response...
+            </div>
+            
+            <div id="decryptedResult" style="background: #2d2d44; padding: 15px; border-radius: 5px; margin-top: 15px; min-height: 50px; font-family: monospace;">
+                Decrypted data will appear here...
             </div>
         </div>
         
-        <footer>
-            <p>Secure Encryption App with Supabase Storage | All encryption/decryption happens locally in your browser</p>
-            <p class="footer-note">Connected to Supabase Project: plqvqenoroacvzwtgoxq</p>
-        </footer>
+        <div id="securityWarning" style="background: rgba(140, 20, 50, 0.2); padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #ff4d7d;">
+            <h3><i class="fas fa-exclamation-triangle"></i> Security Note</h3>
+            <p>Your encryption key NEVER leaves your browser. All encryption/decryption happens locally.</p>
+        </div>
     </div>
-    
-    <div class="notification" id="notification"></div>
-    
-    <!-- Include JavaScript -->
+
+    <!-- Load Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="app.js"></script>
+    
+    <!-- Inline JavaScript as fallback -->
+    <script>
+        // Simple initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('status').textContent = 'App loaded successfully!';
+            document.getElementById('status').className = 'success';
+        });
+    </script>
+    
+    <!-- Load external JS with fallback -->
+    <script src="app.js" onerror="loadFallbackJS()"></script>
+    
+    <script>
+        // Fallback if app.js fails to load
+        function loadFallbackJS() {
+            console.log('External JS failed, loading minimal functionality...');
+            document.getElementById('status').textContent = 'Loading basic functionality...';
+            
+            // Minimal working functions
+            window.generateKey = function() {
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+                let key = '';
+                for (let i = 0; i < 32; i++) {
+                    key += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                document.getElementById('encryptionKey').value = key;
+                showStatus('Key generated!', 'success');
+            };
+            
+            window.showStatus = function(message, type) {
+                const status = document.getElementById('status');
+                status.textContent = message;
+                status.className = type;
+            };
+            
+            window.encryptText = function() {
+                showStatus('Please load the full app.js file for encryption', 'error');
+            };
+            
+            // More minimal functions...
+            showStatus('Loaded basic app. Some features may be limited.', 'info');
+        }
+    </script>
 </body>
 </html>
