@@ -3,187 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Encryption App</title>
+    <title>Secure Encryption/Decryption App</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
-        <header class="app-header">
-            <div class="header-content">
-                <div class="logo">
-                    <i class="fas fa-shield-alt"></i>
-                    <h1>CipherGuard</h1>
-                </div>
-                <p class="tagline">Military-grade encryption at your fingertips</p>
-            </div>
+        <header>
+            <h1><i class="fas fa-lock"></i> Secure Encryption App</h1>
+            <p class="subtitle">Encrypt and decrypt text using AES-GCM with the Web Crypto API</p>
         </header>
-
-        <!-- Status Panel -->
-        <div class="status-panel" id="status">
-            <div class="status-content">
-                <i class="fas fa-check-circle status-icon"></i>
-                <span class="status-text">Ready to encrypt. All operations happen locally in your browser.</span>
+        
+        <div class="app-container">
+            <div class="panel">
+                <div class="panel-header">
+                    <i class="fas fa-edit"></i>
+                    <h2>Input Text</h2>
+                </div>
+                
+                <div class="input-group">
+                    <label for="inputText">Text to encrypt or decrypt:</label>
+                    <textarea id="inputText" placeholder="Enter the text you want to encrypt or paste encrypted data to decrypt..."></textarea>
+                </div>
+                
+                <div class="input-group">
+                    <label for="encryptionKey">Encryption Key:</label>
+                    <div class="key-container">
+                        <input type="text" id="encryptionKey" placeholder="Enter a secure key or generate one">
+                        <button class="btn-generate" id="generateKey">
+                            <i class="fas fa-key"></i> Generate Key
+                        </button>
+                    </div>
+                    <small style="color: #888; margin-top: 5px; display: block;">Use a strong password or generate a secure key</small>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn-encrypt" id="encryptBtn">
+                        <i class="fas fa-lock"></i> Encrypt Text
+                    </button>
+                    <button class="btn-decrypt" id="decryptBtn">
+                        <i class="fas fa-unlock"></i> Decrypt Text
+                    </button>
+                    <button class="btn-clear" id="clearBtn">
+                        <i class="fas fa-broom"></i> Clear All
+                    </button>
+                </div>
             </div>
-            <div class="status-indicator active"></div>
+            
+            <div class="panel">
+                <div class="result-header">
+                    <div class="panel-header">
+                        <i class="fas fa-file-code"></i>
+                        <h2>Result</h2>
+                    </div>
+                    <button class="copy-btn" id="copyResult">
+                        <i class="far fa-copy"></i> Copy
+                    </button>
+                </div>
+                
+                <div class="result-box" id="resultText">
+                    Your encrypted or decrypted text will appear here...
+                </div>
+                
+                <div class="algorithm-info">
+                    <h3><i class="fas fa-info-circle"></i> About the Encryption</h3>
+                    <p>This app uses the AES-GCM (Advanced Encryption Standard - Galois/Counter Mode) algorithm with a 256-bit key. AES-GCM provides both confidentiality and integrity verification. The encryption result includes the initialization vector (IV) and authentication tag for secure decryption.</p>
+                </div>
+                
+                <div class="security-warning">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Security Notice</h3>
+                    <p>1. Never share your encryption key with anyone.<br>
+                       2. This app runs entirely in your browser - no data is sent to any server.<br>
+                       3. For maximum security, use a password manager to generate and store keys.<br>
+                       4. Always verify you're using the correct key before decrypting sensitive information.</p>
+                </div>
+            </div>
         </div>
-
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Input Section -->
-            <section class="input-section card">
-                <div class="section-header">
-                    <h2><i class="fas fa-keyboard"></i> Input Text</h2>
-                    <div class="character-count">
-                        <span id="charCount">0</span> characters
-                    </div>
-                </div>
-                <textarea 
-                    id="inputText" 
-                    class="text-input"
-                    rows="5" 
-                    placeholder="Enter your secret message here..."></textarea>
-            </section>
-
-            <!-- Key Management Section -->
-            <section class="key-section card">
-                <div class="section-header">
-                    <h2><i class="fas fa-key"></i> Encryption Key</h2>
-                    <button class="btn-icon" id="toggleKeyVisibility" title="Show/Hide Key">
-                        <i class="fas fa-eye" id="keyVisibilityIcon"></i>
-                    </button>
-                </div>
-                <div class="key-input-group">
-                    <input 
-                        type="password" 
-                        id="encryptionKey" 
-                        class="key-input"
-                        placeholder="Enter your encryption key...">
-                    <button class="btn-generate" id="generateKeyBtn">
-                        <i class="fas fa-sync-alt"></i> Generate
-                    </button>
-                </div>
-                <div class="key-info">
-                    <div class="key-strength">
-                        <span class="strength-label">Strength:</span>
-                        <div class="strength-meter">
-                            <div class="strength-bar" id="strengthBar"></div>
-                        </div>
-                        <span class="strength-text" id="strengthText">Auto-generated</span>
-                    </div>
-                    <div class="key-length">
-                        <i class="fas fa-ruler-horizontal"></i>
-                        <span id="keyLength">0</span> characters
-                    </div>
-                </div>
-            </section>
-
-            <!-- Action Buttons -->
-            <section class="action-section">
-                <div class="btn-group">
-                    <button class="btn-action btn-encrypt" id="encryptBtn">
-                        <i class="fas fa-lock"></i>
-                        <span>Encrypt</span>
-                    </button>
-                    <button class="btn-action btn-decrypt" id="decryptBtn">
-                        <i class="fas fa-unlock"></i>
-                        <span>Decrypt</span>
-                    </button>
-                    <button class="btn-action btn-clear" id="clearBtn">
-                        <i class="fas fa-broom"></i>
-                        <span>Clear All</span>
-                    </button>
-                    <button class="btn-action btn-sample" id="sampleBtn">
-                        <i class="fas fa-vial"></i>
-                        <span>Load Sample</span>
-                    </button>
-                </div>
-            </section>
-
-            <!-- Results Section -->
-            <section class="results-section card">
-                <div class="section-header">
-                    <h2><i class="fas fa-code"></i> Results</h2>
-                    <button class="btn-copy" id="copyResultBtn" title="Copy to clipboard">
-                        <i class="fas fa-copy"></i> Copy
-                    </button>
-                </div>
-                <div class="result-output" id="result">
-                    <div class="placeholder">
-                        <i class="fas fa-arrow-up"></i>
-                        <p>Encrypted or decrypted results will appear here</p>
-                    </div>
-                </div>
-                <div class="result-meta">
-                    <div class="meta-item">
-                        <i class="fas fa-hashtag"></i>
-                        <span>Output length: <span id="outputLength">0</span> chars</span>
-                    </div>
-                    <div class="meta-item">
-                        <i class="fas fa-clock"></i>
-                        <span>Processed: <span id="processTime">0</span>ms</span>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Security Info -->
-            <section class="security-info card">
-                <div class="security-header">
-                    <i class="fas fa-user-shield security-icon"></i>
-                    <h3>Privacy & Security Guarantee</h3>
-                </div>
-                <div class="security-features">
-                    <div class="feature">
-                        <i class="fas fa-desktop feature-icon"></i>
-                        <div class="feature-content">
-                            <h4>Local Processing</h4>
-                            <p>All encryption happens in your browser. No data is sent to servers.</p>
-                        </div>
-                    </div>
-                    <div class="feature">
-                        <i class="fas fa-fingerprint feature-icon"></i>
-                        <div class="feature-content">
-                            <h4>Zero Tracking</h4>
-                            <p>No cookies, no analytics, no data collection of any kind.</p>
-                        </div>
-                    </div>
-                    <div class="feature">
-                        <i class="fas fa-code-branch feature-icon"></i>
-                        <div class="feature-content">
-                            <h4>Open Source</h4>
-                            <p>Transparent codebase. Verify our security yourself.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="security-note">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <p>Always keep your encryption key safe. If you lose it, your data cannot be recovered.</p>
-                </div>
-            </section>
-        </main>
-
-        <!-- Footer -->
-        <footer class="app-footer">
-            <div class="footer-content">
-                <div class="footer-logo">
-                    <i class="fas fa-shield-alt"></i>
-                    <span>CipherGuard</span>
-                </div>
-                <div class="footer-links">
-                    <a href="#" class="footer-link">Privacy Policy</a>
-                    <a href="#" class="footer-link">GitHub</a>
-                    <a href="#" class="footer-link">Report Issue</a>
-                </div>
-                <div class="footer-copyright">
-                    © 2024 Secure Encryption Tool. All rights reserved.
-                </div>
-            </div>
+        
+        <footer>
+            <p>Secure Encryption App &copy; 2023 | Uses Web Crypto API | All encryption/decryption happens locally in your browser</p>
         </footer>
     </div>
+    
+    <div class="notification" id="notification"></div>
 
-    <!-- JavaScript Files -->
+    <!-- Load the external JavaScript file -->
     <script src="app.js"></script>
 </body>
 </html>
