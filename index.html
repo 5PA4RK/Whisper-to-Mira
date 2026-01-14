@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whisper to Mira</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-shield-alt"></i> Whisper to Mira </h1>
+            <p class="subtitle">Secured Encryption for your Messages</p>
+        </header>
+        
+        <div class="app-container">
+            <!-- Encryption Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <i class="fas fa-lock"></i>
+                    <h2>Local Encryption</h2>
+                </div>
+                
+                <div class="input-group">
+                    <label for="inputText">Text to encrypt:</label>
+                    <textarea id="inputText" placeholder="Enter sensitive data to encrypt...">Confidential business data should be encrypted before storage.</textarea>
+                </div>
+                
+                <div class="input-group">
+                    <label for="encryptionKey">Encryption Key (NEVER sent to server):</label>
+                    <div class="key-container">
+                        <input type="password" id="encryptionKey" placeholder="Enter a strong password">
+                        <button class="btn-generate" id="generateKey">
+                            <i class="fas fa-key"></i> Generate
+                        </button>
+                    </div>
+                    <small class="helper-text">This key never leaves your browser</small>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn-encrypt" id="encryptBtn">
+                        <i class="fas fa-lock"></i> Encrypt Locally
+                    </button>
+                    <button class="btn-decrypt" id="decryptBtn">
+                        <i class="fas fa-unlock"></i> Decrypt Locally
+                    </button>
+                </div>
+                
+                <div class="input-group">
+                    <label>Encrypted Result (Safe for Supabase):</label>
+                    <div class="result-box" id="encryptedResult">
+                        Encrypted data will appear here...
+                    </div>
+                </div>
+                
+                <div class="info-box">
+                    <h3><i class="fas fa-info-circle"></i> Encryption Process</h3>
+                    <p>1. Data encrypted with AES-GCM-256 in your browser<br>
+                       2. Only encrypted data is sent to Supabase<br>
+                       3. Supabase stores encrypted data (cannot read it)<br>
+                       4. Retrieve and decrypt data locally with your key</p>
+                </div>
+            </div>
+            
+            <!-- Supabase Storage Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <i class="fas fa-database"></i>
+                    <h2>Supabase Storage</h2>
+                </div>
+                
+                <div class="server-config">
+                    <h3><i class="fas fa-cog"></i> Configuration</h3>
+                    <div class="input-group">
+                        <label for="dataId">Data Identifier:</label>
+                        <div class="key-container">
+                            <input type="text" id="dataId" placeholder="unique-data-id">
+                            <button class="btn-generate" id="generateDataId">
+                                <i class="fas fa-hashtag"></i> Generate
+                            </button>
+                        </div>
+                        <small class="helper-text">Used to retrieve data from Supabase</small>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="dataDescription">Description (optional):</label>
+                        <input type="text" id="dataDescription" placeholder="Brief description of this encrypted data">
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn-save" id="saveToSupabase">
+                        <i class="fas fa-cloud-upload-alt"></i> Save to Supabase
+                    </button>
+                    <button class="btn-load" id="loadFromSupabase">
+                        <i class="fas fa-cloud-download-alt"></i> Load from Supabase
+                    </button>
+                    <button class="btn-list" id="listFromSupabase">
+                        <i class="fas fa-list"></i> List My Data
+                    </button>
+                </div>
+                
+                <div class="input-group">
+                    <label>Supabase Response:</label>
+                    <div class="result-box" id="supabaseResponse">
+                        Server messages will appear here...
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label>Decrypted Result (from Supabase):</label>
+                    <div class="result-box" id="decryptedResult">
+                        Decrypted data will appear here...
+                    </div>
+                </div>
+                
+                <div class="security-warning">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Security Notes</h3>
+                    <p>• Encryption key stays in your browser<br>
+                       • Supabase only stores encrypted data<br>
+                       • Data IDs should not reveal sensitive info<br>
+                       • Use different keys for different data sets</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Data Listing Modal -->
+        <div class="modal" id="dataListModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2><i class="fas fa-database"></i> Your Encrypted Data on Supabase</h2>
+                    <button class="close-modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="dataList"></div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Secure Encryption App with Supabase Storage | All encryption/decryption happens locally in your browser</p>
+            <p class="footer-note">Connected to Supabase Project: plqvqenoroacvzwtgoxq</p>
+        </footer>
+    </div>
+    
+    <div class="notification" id="notification"></div>
+    
+    <!-- Include JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js"></script>
+</body>
+</html>
