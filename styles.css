@@ -1,64 +1,67 @@
-/* ===== BASE STYLES ===== */
+/* ===== BASE STYLES (Updated for Appeal) ===== */
 :root {
-    /* Color Palette */
-    --primary-color: #2563eb;
-    --primary-light: #3b82f6;
-    --primary-dark: #1d4ed8;
-    --secondary-color: #64748b;
+    /* Color Palette - Modern & Vibrant */
+    --primary-color: #3b82f6; /* Bright Blue */
+    --primary-light: #60a5fa;
+    --primary-dark: #2563eb;
+    --secondary-color: #6b7280; /* Muted Gray */
     --success-color: #10b981;
     --warning-color: #f59e0b;
     --error-color: #ef4444;
     --info-color: #3b82f6;
-    
-    /* Neutral Colors */
-    --background-color: #f8fafc;
+
+    /* Neutral Colors with Gradient */
+    --background-gradient: linear-gradient(135deg, #f0f4f8, #d9e2ec);
     --surface-color: #ffffff;
-    --border-color: #e2e8f0;
+    --border-color: #cbd5e1;
     --text-primary: #1e293b;
-    --text-secondary: #64748b;
-    --text-tertiary: #94a3b8;
-    
-    /* Spacing */
+    --text-secondary: #4b5563;
+    --text-tertiary: #9ca3af;
+
+    /* Spacing & Border Radius (unchanged) */
     --spacing-xs: 4px;
     --spacing-sm: 8px;
     --spacing-md: 16px;
     --spacing-lg: 24px;
     --spacing-xl: 32px;
     --spacing-xxl: 48px;
-    
-    /* Border Radius */
+
     --border-radius-sm: 4px;
     --border-radius-md: 8px;
     --border-radius-lg: 12px;
     --border-radius-xl: 16px;
-    
-    /* Shadows */
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    
-    /* Transitions */
-    --transition-fast: 150ms ease;
-    --transition-normal: 250ms ease;
+
+    /* Shadows - Softer & Elevated */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.15);
+    --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.2);
+
+    /* Transitions for smooth interactions */
+    --transition-fast: 150ms ease-in-out;
+    --transition-normal: 250ms ease-in-out;
 }
 
+/* Reset & Box Sizing */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+/* Body - Elegant Background & Font */
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background-color: var(--background-color);
+    background: var(--background-gradient);
     color: var(--text-primary);
     line-height: 1.6;
     font-size: 15px;
     font-weight: 400;
     min-height: 100vh;
     padding: var(--spacing-md);
+    transition: background 0.3s ease;
 }
 
+/* Container for Content Centering */
 .container {
     max-width: 1000px;
     margin: 0 auto;
@@ -69,6 +72,7 @@ h1, h2, h3, h4 {
     font-weight: 600;
     line-height: 1.3;
     margin-bottom: var(--spacing-sm);
+    letter-spacing: 0.5px;
 }
 
 h1 {
@@ -97,6 +101,10 @@ h3 {
     text-align: center;
     margin-bottom: var(--spacing-xl);
     padding: var(--spacing-xl) 0;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(8px);
+    box-shadow: var(--shadow-md);
+    border-radius: var(--border-radius-lg);
 }
 
 .header-content h1 {
@@ -110,11 +118,16 @@ h3 {
 .header-content h1 i {
     color: var(--primary-color);
     font-size: 28px;
+    transition: transform 0.3s ease;
+}
+
+.header-content h1 i:hover {
+    transform: scale(1.2);
 }
 
 /* ===== STATUS BAR ===== */
 .status-bar {
-    background-color: var(--surface-color);
+    background-color: #ffffff;
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-md);
     padding: var(--spacing-md) var(--spacing-lg);
@@ -125,6 +138,12 @@ h3 {
     font-size: 14px;
     color: var(--text-secondary);
     box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.status-bar:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
 }
 
 .status-bar i {
@@ -134,18 +153,22 @@ h3 {
 
 .status-success {
     border-left: 4px solid var(--success-color);
+    background-color: #f0faf9;
 }
 
 .status-error {
     border-left: 4px solid var(--error-color);
+    background-color: #fef2f2;
 }
 
 .status-info {
     border-left: 4px solid var(--info-color);
+    background-color: #f0f8ff;
 }
 
 .status-warning {
     border-left: 4px solid var(--warning-color);
+    background-color: #fff8f0;
 }
 
 /* ===== CARDS ===== */
@@ -156,12 +179,18 @@ h3 {
     margin-bottom: var(--spacing-xl);
     overflow: hidden;
     border: 1px solid var(--border-color);
+    transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
 }
 
 .card-header {
     padding: var(--spacing-lg);
     border-bottom: 1px solid var(--border-color);
-    background-color: var(--background-color);
+    background: linear-gradient(135deg, #f9fafb, #eef2f6);
 }
 
 .card-header h2 {
@@ -174,18 +203,30 @@ h3 {
 .card-header h2 i {
     color: var(--primary-color);
     font-size: 20px;
+    transition: transform 0.3s ease;
+}
+
+.card-header h2 i:hover {
+    transform: rotate(10deg);
 }
 
 .card-body {
     padding: var(--spacing-xl);
 }
 
+/* Info Card with Soft Shadow & Rounded Edges */
 .info-card {
     background-color: var(--surface-color);
     border-radius: var(--border-radius-lg);
     padding: var(--spacing-lg);
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.info-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
 }
 
 .info-header {
@@ -198,6 +239,11 @@ h3 {
 .info-header i {
     color: var(--success-color);
     font-size: 20px;
+    transition: color 0.3s ease;
+}
+
+.info-header i:hover {
+    color: #0f766e; /* Darker shade for hover effect */
 }
 
 .info-header h3 {
@@ -260,14 +306,14 @@ h3 {
     font-family: inherit;
     font-size: 15px;
     color: var(--text-primary);
-    background-color: var(--surface-color);
-    transition: var(--transition-fast);
+    background-color: #ffffff;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .form-input:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
 textarea.form-input {
@@ -276,6 +322,7 @@ textarea.form-input {
     line-height: 1.5;
 }
 
+/* Key Info Badges with subtle gradients */
 .key-info {
     display: flex;
     justify-content: space-between;
@@ -298,17 +345,17 @@ textarea.form-input {
 
 .key-strong {
     color: var(--success-color);
-    background-color: rgba(16, 185, 129, 0.1);
+    background: rgba(16, 185, 129, 0.1);
 }
 
 .key-good {
     color: var(--info-color);
-    background-color: rgba(59, 130, 246, 0.1);
+    background: rgba(59, 130, 246, 0.1);
 }
 
 .key-weak {
     color: var(--warning-color);
-    background-color: rgba(245, 158, 11, 0.1);
+    background: rgba(245, 158, 11, 0.1);
 }
 
 /* ===== BUTTONS ===== */
@@ -323,22 +370,21 @@ textarea.form-input {
     padding: 10px 20px;
     border-radius: var(--border-radius-md);
     border: none;
-    font-family: inherit;
+    font-family: 'Inter', sans-serif;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    transition: var(--transition-normal);
+    transition: all 0.3s ease;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    white-space: nowrap;
 }
 
 .btn-primary {
     background-color: var(--primary-color);
-    color: white;
-    border: 1px solid var(--primary-color);
+    color: #fff;
+    border: 1px solid var(--primary-dark);
 }
 
 .btn-primary:hover {
@@ -348,13 +394,13 @@ textarea.form-input {
 }
 
 .btn-secondary {
-    background-color: var(--surface-color);
+    background-color: #f9fafb;
     color: var(--text-secondary);
     border: 1px solid var(--border-color);
 }
 
 .btn-secondary:hover {
-    background-color: var(--background-color);
+    background-color: #f3f4f6;
     border-color: var(--secondary-color);
     transform: translateY(-1px);
     box-shadow: var(--shadow-sm);
@@ -366,10 +412,11 @@ textarea.form-input {
     border: 1px solid var(--border-color);
     padding: 6px 12px;
     font-size: 13px;
+    transition: all 0.3s ease;
 }
 
 .btn-outline:hover {
-    background-color: var(--background-color);
+    background-color: #f9fafb;
     border-color: var(--text-secondary);
 }
 
@@ -403,7 +450,7 @@ textarea.form-input {
 }
 
 .result-output {
-    background-color: var(--background-color);
+    background-color: #fff;
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-md);
     padding: var(--spacing-lg);
@@ -412,67 +459,63 @@ textarea.form-input {
     line-height: 1.5;
     min-height: 100px;
     white-space: pre-wrap;
-    word-break: break-all;
+    word-break: break-word;
     color: var(--text-secondary);
     overflow-x: auto;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.3s ease;
 }
 
-/* ===== RESPONSIVE DESIGN ===== */
+.result-output:hover {
+    box-shadow: var(--shadow-lg);
+}
+
+/* ===== RESPONSIVE ADJUSTMENTS (unchanged) ===== */
 @media (max-width: 768px) {
     body {
         padding: var(--spacing-sm);
     }
-    
     .container {
         padding: 0;
     }
-    
     .app-header {
         padding: var(--spacing-lg) 0;
         margin-bottom: var(--spacing-lg);
     }
-    
     h1 {
         font-size: 24px;
     }
-    
     .card-body {
         padding: var(--spacing-lg);
     }
-    
     .button-group {
         flex-direction: column;
     }
-    
     .btn {
         width: 100%;
         justify-content: center;
     }
-    
     .result-header {
         flex-direction: column;
         align-items: flex-start;
         gap: var(--spacing-sm);
     }
-    
     .result-actions {
         width: 100%;
         justify-content: flex-start;
     }
 }
-
 @media (max-width: 480px) {
     .card-body {
         padding: var(--spacing-md);
     }
-    
     .header-content h1 {
         flex-direction: column;
         gap: var(--spacing-xs);
     }
 }
 
-/* ===== UTILITIES ===== */
+/* ===== UTILITIES (unchanged) ===== */
 .text-success { color: var(--success-color); }
 .text-error { color: var(--error-color); }
 .text-warning { color: var(--warning-color); }
