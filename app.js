@@ -252,7 +252,7 @@ function clearAll() {
     
     if (inputText) inputText.value = "";
     if (encryptionKey) encryptionKey.value = "";
-    if (resultDiv) resultDiv.textContent = "Results will appear here...";
+    if (resultDiv) resultDiv.textContent = "";
     if (statusDiv) statusDiv.textContent = "Cleared! Ready to start again.";
     
     currentEncryptedData = null;
