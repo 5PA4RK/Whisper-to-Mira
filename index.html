@@ -5,513 +5,479 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Secure Encryption App</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --secondary: #10b981;
-            --dark-bg: #0f172a;
-            --dark-card: #1e293b;
-            --dark-card-light: #334155;
-            --text-light: #f8fafc;
-            --text-muted: #94a3b8;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --success: #10b981;
-            --border-radius: 12px;
-            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-            --transition: all 0.3s ease;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--dark-bg);
-            color: var(--text-light);
-            line-height: 1.6;
-            min-height: 100vh;
-            padding: 20px;
-            background-image: radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.1) 0%, transparent 20%),
-                              radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.1) 0%, transparent 20%);
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        /* Header */
-        .app-header {
-            text-align: center;
-            margin-bottom: 40px;
-            padding: 30px 20px;
-            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .app-header h1 {
-            color: var(--text-light);
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-        }
-
-        .app-header h1 i {
-            color: var(--primary);
-            background: rgba(99, 102, 241, 0.1);
-            padding: 15px;
-            border-radius: 50%;
-        }
-
-        .app-header p {
-            color: var(--text-muted);
-            font-size: 1.1rem;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        /* Status Bar */
-        .status-bar {
-            background: rgba(30, 41, 59, 0.8);
-            padding: 15px 20px;
-            border-radius: var(--border-radius);
-            margin-bottom: 30px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border-left: 4px solid var(--primary);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        .status-bar i {
-            color: var(--primary);
-            font-size: 1.2rem;
-        }
-
-        /* Main Card */
-        .main-card {
-            background: var(--dark-card);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            overflow: hidden;
-            margin-bottom: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .card-header {
-            background: rgba(30, 41, 59, 0.9);
-            padding: 20px 30px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .card-header h2 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .card-header h2 i {
-            color: var(--primary);
-        }
-
-        .card-body {
-            padding: 30px;
-        }
-
-        /* Form Elements */
-        .form-group {
-            margin-bottom: 25px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: var(--text-muted);
-        }
-
-        textarea, input {
-            width: 100%;
-            padding: 16px;
-            background: var(--dark-card-light);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: var(--border-radius);
-            color: var(--text-light);
-            font-size: 1rem;
-            transition: var(--transition);
-            font-family: 'Inter', sans-serif;
-        }
-
-        textarea:focus, input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-        }
-
-        textarea {
-            resize: vertical;
-            min-height: 120px;
-        }
-
-        /* Buttons */
-        .button-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin: 25px 0;
-        }
-
-        .btn {
-            padding: 14px 24px;
-            border-radius: var(--border-radius);
-            border: none;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(99, 102, 241, 0.3);
-        }
-
-        .btn-secondary {
-            background: var(--dark-card-light);
-            color: var(--text-light);
-        }
-
-        .btn-secondary:hover {
-            background: #475569;
-            transform: translateY(-2px);
-        }
-
-        .btn-success {
-            background: var(--success);
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #0da271;
-            transform: translateY(-2px);
-        }
-
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #dc2626;
-            transform: translateY(-2px);
-        }
-
-        .btn-warning {
-            background: var(--warning);
-            color: white;
-        }
-
-        .btn-warning:hover {
-            background: #d97706;
-            transform: translateY(-2px);
-        }
-
-        /* Result Area */
-        .result-area {
-            background: var(--dark-card-light);
-            padding: 25px;
-            border-radius: var(--border-radius);
-            margin-top: 25px;
-            border: 1px dashed rgba(255, 255, 255, 0.1);
-        }
-
-        .result-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .result-header h3 {
-            font-size: 1.2rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .result-header h3 i {
-            color: var(--secondary);
-        }
-
-        #result {
-            font-family: 'Courier New', monospace;
-            background: rgba(0, 0, 0, 0.2);
-            padding: 20px;
-            border-radius: 8px;
-            min-height: 80px;
-            word-break: break-all;
-            white-space: pre-wrap;
-            color: #a5b4fc;
-        }
-
-        /* Security Note */
-        .security-note {
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(15, 23, 42, 0.9) 100%);
-            padding: 25px;
-            border-radius: var(--border-radius);
-            border-left: 4px solid var(--warning);
-            margin-top: 30px;
-        }
-
-        .security-note h3 {
-            font-size: 1.3rem;
-            font-weight: 600;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: var(--warning);
-        }
-
-        .security-note p {
-            color: var(--text-muted);
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .app-header h1 {
-                font-size: 2rem;
-            }
-            
-            .button-group {
-                flex-direction: column;
-            }
-            
-            .btn {
-                width: 100%;
-            }
-            
-            .card-body {
-                padding: 20px;
-            }
-        }
-
-        /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .fade-in {
-            animation: fadeIn 0.5s ease;
-        }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <header class="app-header fade-in">
-            <h1><i class="fas fa-lock"></i> Secure Encryption App</h1>
-            <p>Encrypt and decrypt text locally in your browser using advanced cryptographic algorithms</p>
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-shield-alt"></i>
+                    <h1>CipherGuard</h1>
+                </div>
+                <p class="tagline">Military-grade encryption at your fingertips</p>
+            </div>
         </header>
-        
-        <div id="status" class="status-bar fade-in">
-            <i class="fas fa-info-circle"></i>
-            <span>Ready to encrypt. All operations happen locally in your browser.</span>
-        </div>
-        
-        <main class="main-card fade-in">
-            <div class="card-header">
-                <h2><i class="fas fa-edit"></i> Text Encryption & Decryption</h2>
+
+        <!-- Status Panel -->
+        <div class="status-panel" id="status">
+            <div class="status-content">
+                <i class="fas fa-check-circle status-icon"></i>
+                <span class="status-text">Ready to encrypt. All operations happen locally in your browser.</span>
             </div>
-            
-            <div class="card-body">
-                <div class="form-group">
-                    <label for="inputText"><i class="fas fa-font"></i>Input Your Text Her</label>
-                    <textarea id="inputText" rows="5" placeholder="Enter your text here...">This is a secret message that needs to be encrypted</textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label for="encryptionKey"><i class="fas fa-key"></i> Encryption Key</label>
-                    <input type="text" id="encryptionKey" placeholder="Write a Key or Generate One">
-                </div>
-                
-                <div class="button-group">
-                    <button class="btn btn-warning" onclick="generateKey()">
-                        <i class="fas fa-key"></i> Generate Secure Key
-                    </button>
-                    <button class="btn btn-primary" onclick="encryptText()">
-                        <i class="fas fa-lock"></i> Encrypt Text
-                    </button>
-                    <button class="btn btn-success" onclick="decryptText()">
-                        <i class="fas fa-unlock"></i> Decrypt Text
-                    </button>
-                    <button class="btn btn-danger" onclick="clearAll()">
-                        <i class="fas fa-trash-alt"></i> Clear All
-                    </button>
-                </div>
-                
-                <div class="result-area">
-                    <div class="result-header">
-                        <h3><i class="fas fa-code"></i> Result</h3>
-                        <button class="btn btn-secondary" onclick="copyResult()">
-                            <i class="fas fa-copy"></i> Copy
-                        </button>
+            <div class="status-indicator active"></div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Input Section -->
+            <section class="input-section card">
+                <div class="section-header">
+                    <h2><i class="fas fa-keyboard"></i> Input Text</h2>
+                    <div class="character-count">
+                        <span id="charCount">0</span> characters
                     </div>
-                    <div id="result">Results will appear here after encryption or decryption...</div>
+                </div>
+                <textarea 
+                    id="inputText" 
+                    class="text-input"
+                    rows="5" 
+                    placeholder="Enter your secret message here..."></textarea>
+            </section>
+
+            <!-- Key Management Section -->
+            <section class="key-section card">
+                <div class="section-header">
+                    <h2><i class="fas fa-key"></i> Encryption Key</h2>
+                    <button class="btn-icon" onclick="toggleKeyVisibility()" title="Show/Hide Key">
+                        <i class="fas fa-eye" id="keyVisibilityIcon"></i>
+                    </button>
+                </div>
+                <div class="key-input-group">
+                    <input 
+                        type="password" 
+                        id="encryptionKey" 
+                        class="key-input"
+                        placeholder="Enter your encryption key...">
+                    <button class="btn-generate" onclick="generateKey()">
+                        <i class="fas fa-sync-alt"></i> Generate
+                    </button>
+                </div>
+                <div class="key-info">
+                    <div class="key-strength">
+                        <span class="strength-label">Strength:</span>
+                        <div class="strength-meter">
+                            <div class="strength-bar" id="strengthBar"></div>
+                        </div>
+                        <span class="strength-text" id="strengthText">Auto-generated</span>
+                    </div>
+                    <div class="key-length">
+                        <i class="fas fa-ruler-horizontal"></i>
+                        <span id="keyLength">0</span> characters
+                    </div>
+                </div>
+            </section>
+
+            <!-- Action Buttons -->
+            <section class="action-section">
+                <div class="btn-group">
+                    <button class="btn-action btn-encrypt" onclick="encryptText()">
+                        <i class="fas fa-lock"></i>
+                        <span>Encrypt</span>
+                    </button>
+                    <button class="btn-action btn-decrypt" onclick="decryptText()">
+                        <i class="fas fa-unlock"></i>
+                        <span>Decrypt</span>
+                    </button>
+                    <button class="btn-action btn-clear" onclick="clearAll()">
+                        <i class="fas fa-broom"></i>
+                        <span>Clear All</span>
+                    </button>
+                    <button class="btn-action btn-sample" onclick="loadSample()">
+                        <i class="fas fa-vial"></i>
+                        <span>Load Sample</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section class="results-section card">
+                <div class="section-header">
+                    <h2><i class="fas fa-code"></i> Results</h2>
+                    <button class="btn-copy" onclick="copyResult()" title="Copy to clipboard">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                </div>
+                <div class="result-output" id="result">
+                    <div class="placeholder">
+                        <i class="fas fa-arrow-up"></i>
+                        <p>Encrypted or decrypted results will appear here</p>
+                    </div>
+                </div>
+                <div class="result-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-hashtag"></i>
+                        <span>Output length: <span id="outputLength">0</span> chars</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-clock"></i>
+                        <span>Processed: <span id="processTime">0</span>ms</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Security Info -->
+            <section class="security-info card">
+                <div class="security-header">
+                    <i class="fas fa-user-shield security-icon"></i>
+                    <h3>Privacy & Security Guarantee</h3>
+                </div>
+                <div class="security-features">
+                    <div class="feature">
+                        <i class="fas fa-desktop feature-icon"></i>
+                        <div class="feature-content">
+                            <h4>Local Processing</h4>
+                            <p>All encryption happens in your browser. No data is sent to servers.</p>
+                        </div>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-fingerprint feature-icon"></i>
+                        <div class="feature-content">
+                            <h4>Zero Tracking</h4>
+                            <p>No cookies, no analytics, no data collection of any kind.</p>
+                        </div>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-code-branch feature-icon"></i>
+                        <div class="feature-content">
+                            <h4>Open Source</h4>
+                            <p>Transparent codebase. Verify our security yourself.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="security-note">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p>Always keep your encryption key safe. If you lose it, your data cannot be recovered.</p>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>CipherGuard</span>
+                </div>
+                <div class="footer-links">
+                    <a href="#" class="footer-link">Privacy Policy</a>
+                    <a href="#" class="footer-link">GitHub</a>
+                    <a href="#" class="footer-link">Report Issue</a>
+                </div>
+                <div class="footer-copyright">
+                    © 2024 Secure Encryption Tool. All rights reserved.
                 </div>
             </div>
-        </main>
-        
-        <div class="security-note fade-in">
-            <h3><i class="fas fa-shield-alt"></i> Security & Privacy Information</h3>
-            <p>All encryption and decryption operations are performed locally in your browser. Your encryption key and data never leave your device, ensuring maximum security. This application uses strong cryptographic algorithms for secure text transformation.</p>
-        </div>
+        </footer>
     </div>
 
-    <!-- Load the JavaScript file -->
-    <script src="app.js"></script>
-    
-    <!-- Fallback if app.js fails to load -->
+    <!-- JavaScript -->
     <script>
-        // Check if app.js loaded properly
-        setTimeout(() => {
-            if (typeof encryptText !== 'function') {
-                console.warn("app.js failed to load, using inline fallback");
-                loadFallbackJS();
+        // Initialize app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+            setupEventListeners();
+        });
+
+        function initializeApp() {
+            // Clear input text
+            const inputText = document.getElementById('inputText');
+            if (inputText) inputText.value = "";
+            
+            // Generate initial secure key
+            const encryptionKey = document.getElementById('encryptionKey');
+            if (encryptionKey) {
+                const randomKey = "CipherKey-" + Math.random().toString(36).substring(2, 12);
+                encryptionKey.value = randomKey;
+                updateKeyMetrics(randomKey);
             }
-        }, 1000);
-        
-        function loadFallbackJS() {
+            
+            // Clear result area
+            const result = document.getElementById('result');
+            if (result) {
+                result.innerHTML = `
+                    <div class="placeholder">
+                        <i class="fas fa-arrow-up"></i>
+                        <p>Encrypted or decrypted results will appear here</p>
+                    </div>
+                `;
+            }
+            
             // Update status
+            updateStatus('App initialized. Ready for secure encryption.', 'success');
+            
+            // Update character count
+            updateCharCount();
+        }
+
+        function setupEventListeners() {
+            const inputText = document.getElementById('inputText');
+            const encryptionKey = document.getElementById('encryptionKey');
+            
+            if (inputText) {
+                inputText.addEventListener('input', updateCharCount);
+            }
+            
+            if (encryptionKey) {
+                encryptionKey.addEventListener('input', function() {
+                    updateKeyMetrics(this.value);
+                });
+            }
+        }
+
+        function updateCharCount() {
+            const inputText = document.getElementById('inputText');
+            const charCount = document.getElementById('charCount');
+            if (inputText && charCount) {
+                charCount.textContent = inputText.value.length;
+            }
+        }
+
+        function updateKeyMetrics(key) {
+            const keyLength = document.getElementById('keyLength');
+            const strengthBar = document.getElementById('strengthBar');
+            const strengthText = document.getElementById('strengthText');
+            
+            if (keyLength) keyLength.textContent = key.length;
+            
+            if (strengthBar && strengthText) {
+                let strength = 0;
+                let text = "Very Weak";
+                let color = "#ef4444";
+                
+                if (key.length >= 32) {
+                    strength = 100;
+                    text = "Excellent";
+                    color = "#10b981";
+                } else if (key.length >= 24) {
+                    strength = 75;
+                    text = "Strong";
+                    color = "#22c55e";
+                } else if (key.length >= 16) {
+                    strength = 50;
+                    text = "Good";
+                    color = "#eab308";
+                } else if (key.length >= 8) {
+                    strength = 25;
+                    text = "Weak";
+                    color = "#f97316";
+                }
+                
+                strengthBar.style.width = `${strength}%`;
+                strengthBar.style.backgroundColor = color;
+                strengthText.textContent = text;
+                strengthText.style.color = color;
+            }
+        }
+
+        function toggleKeyVisibility() {
+            const keyInput = document.getElementById('encryptionKey');
+            const icon = document.getElementById('keyVisibilityIcon');
+            
+            if (keyInput.type === 'password') {
+                keyInput.type = 'text';
+                icon.className = 'fas fa-eye-slash';
+            } else {
+                keyInput.type = 'password';
+                icon.className = 'fas fa-eye';
+            }
+        }
+
+        function generateKey() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,.<>?';
+            let key = 'CipherKey-';
+            
+            for (let i = 0; i < 24; i++) {
+                key += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            
+            const encryptionKey = document.getElementById('encryptionKey');
+            encryptionKey.value = key;
+            updateKeyMetrics(key);
+            
+            // Animation effect
+            const btn = document.querySelector('.btn-generate');
+            btn.classList.add('generating');
+            setTimeout(() => btn.classList.remove('generating'), 300);
+            
+            updateStatus('New encryption key generated successfully', 'success');
+        }
+
+        function encryptText() {
+            const input = document.getElementById('inputText').value;
+            const key = document.getElementById('encryptionKey').value;
+            const startTime = performance.now();
+            
+            if (!input.trim()) {
+                updateStatus('Please enter text to encrypt', 'error');
+                return;
+            }
+            
+            if (!key.trim()) {
+                updateStatus('Please enter an encryption key', 'error');
+                return;
+            }
+            
+            // Simple encryption for demo
+            let encrypted = '';
+            for (let i = 0; i < input.length; i++) {
+                const charCode = input.charCodeAt(i) ^ key.charCodeAt(i % key.length);
+                encrypted += String.fromCharCode(charCode);
+            }
+            
+            const encodedResult = btoa(encrypted);
+            const endTime = performance.now();
+            
+            displayResult(encodedResult, 'encrypted');
+            updateProcessTime(endTime - startTime);
+            updateStatus('Text encrypted successfully', 'success');
+        }
+
+        function decryptText() {
+            const input = document.getElementById('inputText').value;
+            const key = document.getElementById('encryptionKey').value;
+            const startTime = performance.now();
+            
+            if (!input.trim()) {
+                updateStatus('Please enter text to decrypt', 'error');
+                return;
+            }
+            
+            if (!key.trim()) {
+                updateStatus('Please enter an encryption key', 'error');
+                return;
+            }
+            
+            try {
+                const decodedInput = atob(input);
+                let decrypted = '';
+                
+                for (let i = 0; i < decodedInput.length; i++) {
+                    const charCode = decodedInput.charCodeAt(i) ^ key.charCodeAt(i % key.length);
+                    decrypted += String.fromCharCode(charCode);
+                }
+                
+                const endTime = performance.now();
+                displayResult(decrypted, 'decrypted');
+                updateProcessTime(endTime - startTime);
+                updateStatus('Text decrypted successfully', 'success');
+            } catch (e) {
+                updateStatus('Decryption failed: Invalid encrypted text', 'error');
+            }
+        }
+
+        function displayResult(text, type) {
+            const result = document.getElementById('result');
+            const outputLength = document.getElementById('outputLength');
+            
+            result.innerHTML = `
+                <div class="result-content ${type}">
+                    <div class="result-type">
+                        <i class="fas fa-${type === 'encrypted' ? 'lock' : 'unlock'}"></i>
+                        ${type === 'encrypted' ? 'Encrypted Text' : 'Decrypted Text'}
+                    </div>
+                    <pre class="result-text">${text}</pre>
+                </div>
+            `;
+            
+            if (outputLength) outputLength.textContent = text.length;
+        }
+
+        function updateProcessTime(time) {
+            const processTime = document.getElementById('processTime');
+            if (processTime) {
+                processTime.textContent = Math.round(time);
+            }
+        }
+
+        function clearAll() {
+            document.getElementById('inputText').value = '';
+            document.getElementById('encryptionKey').value = '';
+            document.getElementById('result').innerHTML = `
+                <div class="placeholder">
+                    <i class="fas fa-arrow-up"></i>
+                    <p>Encrypted or decrypted results will appear here</p>
+                </div>
+            `;
+            
+            updateCharCount();
+            updateStatus('All fields cleared', 'info');
+            
+            // Re-initialize with new key
+            setTimeout(() => {
+                const randomKey = "CipherKey-" + Math.random().toString(36).substring(2, 12);
+                document.getElementById('encryptionKey').value = randomKey;
+                updateKeyMetrics(randomKey);
+            }, 100);
+        }
+
+        function loadSample() {
+            const sampleText = "This is a sample secret message that demonstrates the encryption capabilities of CipherGuard. Try encrypting this text with your key!";
+            document.getElementById('inputText').value = sampleText;
+            updateCharCount();
+            updateStatus('Sample text loaded', 'info');
+        }
+
+        function copyResult() {
+            const result = document.getElementById('result');
+            const resultText = result.querySelector('.result-text');
+            
+            if (resultText) {
+                navigator.clipboard.writeText(resultText.textContent)
+                    .then(() => {
+                        const btn = document.querySelector('.btn-copy');
+                        btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                        btn.classList.add('copied');
+                        
+                        setTimeout(() => {
+                            btn.innerHTML = '<i class="fas fa-copy"></i> Copy';
+                            btn.classList.remove('copied');
+                        }, 2000);
+                        
+                        updateStatus('Result copied to clipboard', 'success');
+                    })
+                    .catch(err => {
+                        updateStatus('Failed to copy: ' + err, 'error');
+                    });
+            }
+        }
+
+        function updateStatus(message, type) {
             const status = document.getElementById('status');
-            status.innerHTML = '<i class="fas fa-exclamation-triangle"></i> <span>Loaded basic functionality (app.js failed to load)</span>';
-            status.style.borderLeftColor = 'var(--warning)';
+            const statusText = status.querySelector('.status-text');
+            const statusIcon = status.querySelector('.status-icon');
+            const indicator = status.querySelector('.status-indicator');
             
-            // Simple fallback functions
-            window.generateKey = function() {
-                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-                let key = '';
-                for (let i = 0; i < 32; i++) {
-                    key += chars.charAt(Math.floor(Math.random() * chars.length));
-                }
-                document.getElementById('encryptionKey').value = key;
-                
-                // Update status
-                status.innerHTML = '<i class="fas fa-check-circle"></i> <span>Secure key generated successfully!</span>';
-                status.style.borderLeftColor = 'var(--success)';
+            statusText.textContent = message;
+            
+            // Update icon and color based on type
+            const types = {
+                success: { icon: 'fa-check-circle', color: '#10b981' },
+                error: { icon: 'fa-exclamation-circle', color: '#ef4444' },
+                info: { icon: 'fa-info-circle', color: '#3b82f6' },
+                warning: { icon: 'fa-exclamation-triangle', color: '#f59e0b' }
             };
             
-            window.encryptText = function() {
-                const input = document.getElementById('inputText').value;
-                const key = document.getElementById('encryptionKey').value;
-                
-                if (!input.trim()) {
-                    status.innerHTML = '<i class="fas fa-exclamation-circle"></i> <span>Please enter text to encrypt</span>';
-                    status.style.borderLeftColor = 'var(--danger)';
-                    return;
-                }
-                
-                // Simple "encryption" for demo purposes
-                let result = '';
-                for (let i = 0; i < input.length; i++) {
-                    const charCode = input.charCodeAt(i) ^ key.charCodeAt(i % key.length);
-                    result += String.fromCharCode(charCode);
-                }
-                
-                // Convert to base64 to make it look encrypted
-                const encodedResult = btoa(result);
-                
-                document.getElementById('result').textContent = encodedResult;
-                status.innerHTML = '<i class="fas fa-check-circle"></i> <span>Text encrypted successfully (using fallback method)</span>';
-                status.style.borderLeftColor = 'var(--success)';
-            };
+            if (types[type]) {
+                statusIcon.className = `fas ${types[type].icon}`;
+                indicator.style.backgroundColor = types[type].color;
+            }
             
-            window.decryptText = function() {
-                const input = document.getElementById('inputText').value;
-                const key = document.getElementById('encryptionKey').value;
-                
-                if (!input.trim()) {
-                    status.innerHTML = '<i class="fas fa-exclamation-circle"></i> <span>Please enter text to decrypt</span>';
-                    status.style.borderLeftColor = 'var(--danger)';
-                    return;
-                }
-                
-                try {
-                    // Try to decode from base64
-                    const decodedInput = atob(input);
-                    
-                    // Simple "decryption" for demo purposes
-                    let result = '';
-                    for (let i = 0; i < decodedInput.length; i++) {
-                        const charCode = decodedInput.charCodeAt(i) ^ key.charCodeAt(i % key.length);
-                        result += String.fromCharCode(charCode);
-                    }
-                    
-                    document.getElementById('result').textContent = result;
-                    status.innerHTML = '<i class="fas fa-check-circle"></i> <span>Text decrypted successfully (using fallback method)</span>';
-                    status.style.borderLeftColor = 'var(--success)';
-                } catch (e) {
-                    document.getElementById('result').textContent = 'Error: Invalid encrypted text format';
-                    status.innerHTML = '<i class="fas fa-exclamation-circle"></i> <span>Decryption failed - invalid format</span>';
-                    status.style.borderLeftColor = 'var(--danger)';
-                }
-            };
-            
-            window.clearAll = function() {
-                document.getElementById('inputText').value = '';
-                document.getElementById('encryptionKey').value = '';
-                document.getElementById('result').textContent = 'Results will appear here after encryption or decryption...';
-                status.innerHTML = '<i class="fas fa-info-circle"></i> <span>All fields cleared. Ready for new input.</span>';
-                status.style.borderLeftColor = 'var(--primary)';
-            };
-            
-            window.copyResult = function() {
-                const resultText = document.getElementById('result').textContent;
-                if (resultText && resultText !== 'Results will appear here after encryption or decryption...') {
-                    navigator.clipboard.writeText(resultText)
-                        .then(() => {
-                            // Show temporary success message
-                            const copyBtn = document.querySelector('.btn-secondary');
-                            const originalHTML = copyBtn.innerHTML;
-                            copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-                            copyBtn.style.background = 'var(--success)';
-                            
-                            setTimeout(() => {
-                                copyBtn.innerHTML = originalHTML;
-                                copyBtn.style.background = '';
-                            }, 2000);
-                        })
-                        .catch(err => {
-                            console.error('Failed to copy: ', err);
-                        });
-                }
-            };
+            // Add animation
+            status.classList.add('updated');
+            setTimeout(() => status.classList.remove('updated'), 500);
         }
     </script>
 </body>
