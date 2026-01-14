@@ -1,117 +1,95 @@
-// Secure Encryption App with Supabase Storage
-console.log('Secure Encryption App loading...');
+// Secure Encryption App - Main JavaScript
+console.log("=== ENCRYPTION APP STARTING ===");
 
-// Configuration - USE YOUR OWN CREDENTIALS
-const SUPABASE_URL = 'https://plqvqenoroacvzwtgoxq.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_91IHQ5--y4tDIo8L9X2ZJQ_YeThfdu_';
-
-// Global variables
-let supabase = null;
+// Global variable to store encrypted data
 let currentEncryptedData = null;
-const sessionId = 'session-' + Math.random().toString(36).substring(2, 15);
 
-// DOM Elements
-const inputText = document.getElementById('inputText');
-const encryptionKey = document.getElementById('encryptionKey');
-const generateKeyBtn = document.getElementById('generateKey');
-const encryptBtn = document.getElementById('encryptBtn');
-const decryptBtn = document.getElementById('decryptBtn');
-const clearBtn = document.getElementById('clearBtn');
-const resultText = document.getElementById('resultText');
-const dataId = document.getElementById('dataId');
-const dataDescription = document.getElementById('dataDescription');
-const generateDataIdBtn = document.getElementById('generateDataId');
-const saveToSupabaseBtn = document.getElementById('saveToSupabase');
-const loadFromSupabaseBtn = document.getElementById('loadFromSupabase');
-const serverResponse = document.getElementById('serverResponse');
-const notification = document.getElementById('notification');
-const statusDot = document.getElementById('statusDot');
-const statusText = document.getElementById('statusText');
+// DOM Elements - get them AFTER page loads
+let inputText, encryptionKey, resultDiv, statusDiv;
 
-// Initialize the app
-async function initApp() {
-    console.log('Initializing app...');
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("DOM loaded, getting elements...");
     
-    try {
-        // Initialize Supabase
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        console.log('Supabase client initialized');
-        
-        // Set up event listeners
-        setupEventListeners();
-        
-        // Test Supabase connection
-        await testSupabaseConnection();
-        
-        // Initialize with example data
-        initializeExample();
-        
-        showNotification('App ready! Encrypt text to get started.', 'success');
-        
-    } catch (error) {
-        console.error('Initialization error:', error);
-        showNotification('App loaded with limited functionality', 'error');
-        updateStatus('offline', 'Supabase not connected - using offline mode');
-    }
-}
-
-// Set up all event listeners
-function setupEventListeners() {
-    generateKeyBtn.addEventListener('click', generateKey);
-    encryptBtn.addEventListener('click', encryptText);
-    decryptBtn.addEventListener('click', decryptText);
-    clearBtn.addEventListener('click', clearAll);
-    generateDataIdBtn.addEventListener('click', generateDataId);
-    saveToSupabaseBtn.addEventListener('click', saveToSupabase);
-    loadFromSupabaseBtn.addEventListener('click', loadFromSupabase);
+    // Get DOM elements
+    inputText = document.getElementById('inputText');
+    encryptionKey = document.getElementById('encryptionKey');
+    resultDiv = document.getElementById('result');
+    statusDiv = document.getElementById('status');
     
-    console.log('Event listeners set up');
-}
+    console.log("Elements found:", {
+        inputText: !!inputText,
+        encryptionKey: !!encryptionKey,
+        resultDiv: !!resultDiv,
+        statusDiv: !!statusDiv
+    });
+    
+    // Set initial values
+    if (inputText) inputText.value = "This is a secret message that will be encrypted.";
+    if (encryptionKey) encryptionKey.value = "MySecureKey-" + Math.random().toString(36).substring(2, 8);
+    if (statusDiv) statusDiv.textContent = "✅ App ready! Click 'Generate Key' or 'Encrypt' to start.";
+    
+    console.log("App initialized successfully!");
+});
 
 // Generate a secure random key
 function generateKey() {
+    console.log("Generating key...");
+    
     try {
+        if (!encryptionKey) {
+            alert("Error: Encryption key element not found!");
+            return;
+        }
+        
+        // Generate random bytes
         const array = new Uint8Array(16);
         window.crypto.getRandomValues(array);
+        
+        // Convert to base64
         const key = btoa(String.fromCharCode.apply(null, array))
             .replace(/\+/g, '-')
             .replace(/\//g, '_')
             .replace(/=+$/, '');
+        
+        // Set the key
         encryptionKey.value = key;
-        showNotification('Secure key generated!', 'success');
+        
+        // Update status
+        if (statusDiv) statusDiv.textContent = "✅ Secure key generated!";
+        
+        console.log("Key generated:", key.substring(0, 10) + "...");
+        
     } catch (error) {
-        console.error('Key generation error:', error);
-        showNotification('Failed to generate key', 'error');
+        console.error("Key generation error:", error);
+        if (statusDiv) statusDiv.textContent = "❌ Error generating key";
     }
-}
-
-// Generate a data ID
-function generateDataId() {
-    const id = 'data-' + Math.random().toString(36).substring(2, 10) + 
-              '-' + Date.now().toString(36).substring(4);
-    dataId.value = id;
-    showNotification('Generated new Data ID', 'success');
 }
 
 // Encrypt text
 async function encryptText() {
-    const text = inputText.value.trim();
-    const keyString = encryptionKey.value.trim();
-    
-    if (!text) {
-        showNotification('Please enter text to encrypt.', 'error');
-        return;
-    }
-    
-    if (!keyString) {
-        showNotification('Please enter an encryption key.', 'error');
-        return;
-    }
+    console.log("Starting encryption...");
     
     try {
-        resultText.textContent = 'Encrypting...';
+        // Get values
+        const text = inputText ? inputText.value.trim() : "";
+        const keyString = encryptionKey ? encryptionKey.value.trim() : "";
         
-        // Generate a key from the password using PBKDF2
+        // Validate
+        if (!text) {
+            alert("Please enter text to encrypt");
+            return;
+        }
+        if (!keyString) {
+            alert("Please enter an encryption key");
+            return;
+        }
+        
+        // Update UI
+        if (resultDiv) resultDiv.textContent = "Encrypting...";
+        if (statusDiv) statusDiv.textContent = "⏳ Encrypting...";
+        
+        // Generate key from password
         const baseKey = await crypto.subtle.importKey(
             "raw",
             new TextEncoder().encode(keyString),
@@ -120,11 +98,11 @@ async function encryptText() {
             ["deriveKey"]
         );
         
-        // Derive a key using PBKDF2
+        // Derive encryption key
         const key = await crypto.subtle.deriveKey(
             {
                 name: "PBKDF2",
-                salt: new TextEncoder().encode("secure-salt-123"),
+                salt: new TextEncoder().encode("secure-salt"),
                 iterations: 100000,
                 hash: "SHA-256"
             },
@@ -134,10 +112,10 @@ async function encryptText() {
             ["encrypt", "decrypt"]
         );
         
-        // Generate a random initialization vector (IV)
+        // Generate IV
         const iv = crypto.getRandomValues(new Uint8Array(12));
         
-        // Encrypt the text
+        // Encrypt
         const encryptedData = await crypto.subtle.encrypt(
             {
                 name: "AES-GCM",
@@ -152,60 +130,59 @@ async function encryptText() {
         const encryptedBase64 = btoa(String.fromCharCode.apply(null, encryptedBytes));
         const ivBase64 = btoa(String.fromCharCode.apply(null, iv));
         
-        // Create result object
+        // Store for later use
         currentEncryptedData = {
             iv: ivBase64,
             data: encryptedBase64,
-            algorithm: "AES-GCM-256-PBKDF2",
+            algorithm: "AES-GCM-256",
             timestamp: new Date().toISOString()
         };
         
-        // Display the result
-        resultText.textContent = JSON.stringify(currentEncryptedData, null, 2);
+        // Display result
+        if (resultDiv) {
+            resultDiv.textContent = JSON.stringify(currentEncryptedData, null, 2);
+        }
         
-        showNotification('Text encrypted successfully!', 'success');
+        if (statusDiv) {
+            statusDiv.textContent = "✅ Text encrypted successfully!";
+        }
+        
+        console.log("Encryption successful!");
         
     } catch (error) {
-        console.error('Encryption error:', error);
-        resultText.textContent = 'Error: Encryption failed';
-        showNotification('Encryption failed!', 'error');
+        console.error("Encryption error:", error);
+        
+        if (resultDiv) {
+            resultDiv.textContent = "Error: " + error.message;
+        }
+        if (statusDiv) {
+            statusDiv.textContent = "❌ Encryption failed";
+        }
     }
 }
 
 // Decrypt text
 async function decryptText() {
-    const text = inputText.value.trim();
-    const keyString = encryptionKey.value.trim();
-    
-    if (!text) {
-        showNotification('Please enter text to decrypt.', 'error');
-        return;
-    }
-    
-    if (!keyString) {
-        showNotification('Please enter the decryption key.', 'error');
-        return;
-    }
+    console.log("Starting decryption...");
     
     try {
-        resultText.textContent = 'Decrypting...';
+        // Get key
+        const keyString = encryptionKey ? encryptionKey.value.trim() : "";
         
-        // Try to parse as JSON
-        let encryptedObj;
-        try {
-            encryptedObj = JSON.parse(text);
-        } catch (e) {
-            // If not JSON, use currentEncryptedData
-            if (!currentEncryptedData) {
-                throw new Error('No encrypted data available');
-            }
-            encryptedObj = currentEncryptedData;
+        if (!keyString) {
+            alert("Please enter the encryption key");
+            return;
         }
         
-        // Check required fields
-        if (!encryptedObj.iv || !encryptedObj.data) {
-            throw new Error('Invalid encrypted data format');
+        // Check if we have encrypted data
+        if (!currentEncryptedData) {
+            alert("No encrypted data available. Encrypt something first.");
+            return;
         }
+        
+        // Update UI
+        if (resultDiv) resultDiv.textContent = "Decrypting...";
+        if (statusDiv) statusDiv.textContent = "⏳ Decrypting...";
         
         // Generate key from password
         const baseKey = await crypto.subtle.importKey(
@@ -219,7 +196,7 @@ async function decryptText() {
         const key = await crypto.subtle.deriveKey(
             {
                 name: "PBKDF2",
-                salt: new TextEncoder().encode("secure-salt-123"),
+                salt: new TextEncoder().encode("secure-salt"),
                 iterations: 100000,
                 hash: "SHA-256"
             },
@@ -230,8 +207,8 @@ async function decryptText() {
         );
         
         // Convert from base64
-        const iv = new Uint8Array(atob(encryptedObj.iv).split('').map(c => c.charCodeAt(0)));
-        const encryptedData = new Uint8Array(atob(encryptedObj.data).split('').map(c => c.charCodeAt(0)));
+        const iv = new Uint8Array(atob(currentEncryptedData.iv).split('').map(c => c.charCodeAt(0)));
+        const encryptedData = new Uint8Array(atob(currentEncryptedData.data).split('').map(c => c.charCodeAt(0)));
         
         // Decrypt
         const decryptedData = await crypto.subtle.decrypt(
@@ -247,208 +224,44 @@ async function decryptText() {
         const decryptedText = new TextDecoder().decode(decryptedData);
         
         // Display result
-        resultText.textContent = decryptedText;
+        if (resultDiv) {
+            resultDiv.textContent = decryptedText;
+        }
         
-        showNotification('Text decrypted successfully!', 'success');
+        if (statusDiv) {
+            statusDiv.textContent = "✅ Text decrypted successfully!";
+        }
+        
+        console.log("Decryption successful!");
         
     } catch (error) {
-        console.error('Decryption error:', error);
-        resultText.textContent = 'Error: Decryption failed. Check your key and data format.';
-        showNotification('Decryption failed!', 'error');
-    }
-}
-
-// Save to Supabase
-async function saveToSupabase() {
-    if (!currentEncryptedData) {
-        showNotification('No encrypted data to save. Encrypt something first.', 'error');
-        return;
-    }
-    
-    const id = dataId.value.trim();
-    const description = dataDescription.value.trim();
-    
-    if (!id) {
-        showNotification('Please enter a Data ID', 'error');
-        return;
-    }
-    
-    try {
-        serverResponse.textContent = 'Saving to Supabase...';
+        console.error("Decryption error:", error);
         
-        // Prepare data
-        const dataToSave = {
-            data_id: id,
-            encrypted_data: currentEncryptedData.data,
-            encryption_iv: currentEncryptedData.iv,
-            algorithm: currentEncryptedData.algorithm,
-            description: description || 'No description',
-            session_id: sessionId,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-        };
-        
-        // Save to Supabase
-        const { data, error } = await supabase
-            .from('encrypted_data')
-            .upsert(dataToSave, { onConflict: 'data_id' });
-        
-        if (error) {
-            if (error.message.includes('does not exist')) {
-                throw new Error('Table does not exist. Create it in Supabase first.');
-            }
-            throw error;
+        if (resultDiv) {
+            resultDiv.textContent = "Error: Decryption failed. Wrong key or corrupted data.";
         }
-        
-        serverResponse.textContent = `✅ Saved successfully!\nID: ${id}\nTime: ${new Date().toLocaleTimeString()}`;
-        
-        showNotification('Data saved to Supabase!', 'success');
-        
-        // Generate new ID for next save
-        generateDataId();
-        
-    } catch (error) {
-        console.error('Supabase save error:', error);
-        serverResponse.textContent = `❌ Save failed: ${error.message}`;
-        showNotification('Failed to save to Supabase', 'error');
-    }
-}
-
-// Load from Supabase
-async function loadFromSupabase() {
-    const id = dataId.value.trim();
-    
-    if (!id) {
-        showNotification('Please enter a Data ID', 'error');
-        return;
-    }
-    
-    try {
-        serverResponse.textContent = 'Loading from Supabase...';
-        
-        // Load from Supabase
-        const { data, error } = await supabase
-            .from('encrypted_data')
-            .select('*')
-            .eq('data_id', id)
-            .single();
-        
-        if (error) {
-            throw error;
+        if (statusDiv) {
+            statusDiv.textContent = "❌ Decryption failed";
         }
-        
-        if (!data) {
-            throw new Error('Data not found');
-        }
-        
-        // Update current encrypted data
-        currentEncryptedData = {
-            iv: data.encryption_iv,
-            data: data.encrypted_data,
-            algorithm: data.algorithm,
-            timestamp: data.created_at
-        };
-        
-        // Display encrypted data
-        resultText.textContent = JSON.stringify(currentEncryptedData, null, 2);
-        
-        serverResponse.textContent = `✅ Loaded successfully!\nID: ${data.data_id}\nDescription: ${data.description}\nCreated: ${new Date(data.created_at).toLocaleDateString()}`;
-        
-        showNotification('Data loaded from Supabase!', 'success');
-        
-        // Auto-decrypt if key is available
-        const keyString = encryptionKey.value.trim();
-        if (keyString) {
-            setTimeout(decryptText, 500);
-        }
-        
-    } catch (error) {
-        console.error('Supabase load error:', error);
-        serverResponse.textContent = `❌ Load failed: ${error.message}`;
-        showNotification('Failed to load from Supabase', 'error');
     }
 }
 
 // Clear all fields
 function clearAll() {
-    inputText.value = '';
-    encryptionKey.value = '';
-    resultText.textContent = 'Encrypted/decrypted text will appear here...';
-    serverResponse.textContent = 'Supabase messages will appear here...';
+    console.log("Clearing all...");
+    
+    if (inputText) inputText.value = "";
+    if (encryptionKey) encryptionKey.value = "";
+    if (resultDiv) resultDiv.textContent = "Results will appear here...";
+    if (statusDiv) statusDiv.textContent = "Cleared! Ready to start again.";
+    
     currentEncryptedData = null;
-    showNotification('All fields cleared', 'success');
 }
-
-// Test Supabase connection
-async function testSupabaseConnection() {
-    try {
-        const { data, error } = await supabase
-            .from('encrypted_data')
-            .select('count', { count: 'exact', head: true });
-        
-        if (error) {
-            if (error.message.includes('does not exist')) {
-                updateStatus('warning', 'Table not found - create it in Supabase');
-                showNotification('Table does not exist. Create it to enable storage.', 'error');
-            } else {
-                updateStatus('offline', 'Connection error: ' + error.message);
-            }
-        } else {
-            updateStatus('online', 'Connected to Supabase');
-        }
-    } catch (error) {
-        updateStatus('offline', 'Cannot connect to Supabase');
-    }
-}
-
-// Update status indicator
-function updateStatus(status, message) {
-    statusDot.className = 'status-indicator';
-    
-    switch(status) {
-        case 'online':
-            statusDot.classList.add('status-online');
-            statusText.textContent = '✓ ' + message;
-            break;
-        case 'warning':
-            statusDot.style.background = '#f39c12';
-            statusText.textContent = '⚠ ' + message;
-            break;
-        case 'offline':
-            statusDot.classList.add('status-offline');
-            statusText.textContent = '✗ ' + message;
-            break;
-    }
-}
-
-// Initialize with example
-function initializeExample() {
-    inputText.value = "This is a confidential message that will be encrypted.";
-    encryptionKey.value = 'MySecureKey-' + Math.random().toString(36).substring(2, 8);
-    generateDataId();
-    dataDescription.value = 'Example encrypted message';
-}
-
-// Show notification
-function showNotification(message, type = 'success') {
-    notification.textContent = message;
-    notification.className = 'notification';
-    notification.classList.add(type === 'error' ? 'error' : 'success');
-    notification.classList.add('show');
-    
-    setTimeout(() => {
-        notification.classList.remove('show');
-    }, 3000);
-}
-
-// Initialize app when page loads
-document.addEventListener('DOMContentLoaded', initApp);
 
 // Export functions to global scope
 window.generateKey = generateKey;
 window.encryptText = encryptText;
 window.decryptText = decryptText;
 window.clearAll = clearAll;
-window.generateDataId = generateDataId;
-window.saveToSupabase = saveToSupabase;
-window.loadFromSupabase = loadFromSupabase;
+
+console.log("=== ENCRYPTION APP LOADED ===");
