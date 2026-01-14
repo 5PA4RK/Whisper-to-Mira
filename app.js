@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Set initial values
-    if (inputText) inputText.value = "This is a secret message that will be encrypted.";
+    if (inputText) inputText.value = "";
     if (encryptionKey) encryptionKey.value = "MySecureKey-" + Math.random().toString(36).substring(2, 8);
     if (statusDiv) statusDiv.textContent = "✅ App ready! Click 'Generate Key' or 'Encrypt' to start.";
     
