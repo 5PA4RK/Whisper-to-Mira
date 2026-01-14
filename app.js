@@ -97,13 +97,13 @@ function updateKeyStrengthDisplay() {
     if (key.length === 0) {
         strength = "Auto-generated";
         className = "";
-    } else if (key.length >= 32) {
+    } else if (key.length >= 16) {
         strength = "Strong";
         className = "key-strong";
-    } else if (key.length >= 16) {
+    } else if (key.length >= 8) {
         strength = "Medium";
         className = "key-good"; // Changed from "key-medium" to match CSS
-    } else if (key.length >= 8) {
+    } else if (key.length >= 4) {
         strength = "Weak";
         className = "key-weak";
     } else {
