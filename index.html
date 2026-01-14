@@ -3,123 +3,404 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Encryption App</title>
+    <title>Secure Encryption/Decryption App</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Minimal inline CSS to ensure basic styling works */
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background: #1a1a2e; color: #e6e6e6; min-height: 100vh; padding: 20px; }
-        .container { max-width: 1000px; margin: 0 auto; }
-        header { text-align: center; margin-bottom: 30px; padding: 20px; }
-        h1 { color: #6c63ff; font-size: 2.5rem; margin-bottom: 10px; }
-        .panel { background: rgba(30, 30, 46, 0.8); border-radius: 10px; padding: 20px; margin-bottom: 20px; }
-        textarea, input { width: 100%; padding: 10px; margin: 10px 0; background: #2d2d44; border: 1px solid #444; color: white; border-radius: 5px; }
-        button { background: #6c63ff; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
-        button:hover { background: #5a52e0; }
-        #status { padding: 10px; margin: 10px 0; border-radius: 5px; }
-        .success { background: rgba(46, 204, 113, 0.2); color: #2ecc71; }
-        .error { background: rgba(231, 76, 60, 0.2); color: #e74c3c; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e6e6e6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #00dbde, #fc00ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .subtitle {
+            color: #a0a0c0;
+            font-size: 1.1rem;
+        }
+        
+        .app-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+        
+        @media (max-width: 900px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .panel {
+            background: rgba(30, 30, 46, 0.8);
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .panel-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #3a3a5d;
+        }
+        
+        .panel-header i {
+            font-size: 1.5rem;
+            margin-right: 10px;
+            color: #6c63ff;
+        }
+        
+        h2 {
+            font-size: 1.6rem;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #b0b0d0;
+        }
+        
+        textarea, input {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(20, 20, 35, 0.8);
+            border: 1px solid #3a3a5d;
+            border-radius: 6px;
+            color: #e6e6e6;
+            font-size: 1rem;
+            resize: vertical;
+        }
+        
+        textarea {
+            min-height: 120px;
+            font-family: monospace;
+        }
+        
+        .key-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .key-container input {
+            flex-grow: 1;
+        }
+        
+        button {
+            background: linear-gradient(90deg, #6c63ff, #8a84ff);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        button:hover {
+            background: linear-gradient(90deg, #5a52e0, #7a74e6);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(108, 99, 255, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .btn-generate {
+            background: linear-gradient(90deg, #00b4db, #0083b0);
+            white-space: nowrap;
+        }
+        
+        .btn-generate:hover {
+            background: linear-gradient(90deg, #0099c0, #006d8f);
+        }
+        
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 25px;
+        }
+        
+        .btn-encrypt {
+            background: linear-gradient(90deg, #11998e, #38ef7d);
+        }
+        
+        .btn-encrypt:hover {
+            background: linear-gradient(90deg, #0d8a7f, #2ed672);
+        }
+        
+        .btn-decrypt {
+            background: linear-gradient(90deg, #f46b45, #eea849);
+        }
+        
+        .btn-decrypt:hover {
+            background: linear-gradient(90deg, #e05a3a, #e0973a);
+        }
+        
+        .btn-save {
+            background: linear-gradient(90deg, #3ECF8E, #2ebd7e);
+        }
+        
+        .btn-save:hover {
+            background: linear-gradient(90deg, #2ebd7e, #1dac6d);
+        }
+        
+        .btn-load {
+            background: linear-gradient(90deg, #8a2be2, #9370db);
+        }
+        
+        .btn-load:hover {
+            background: linear-gradient(90deg, #7a1ad2, #8360cb);
+        }
+        
+        .btn-clear {
+            background: linear-gradient(90deg, #8e0e00, #1f1c18);
+        }
+        
+        .btn-clear:hover {
+            background: linear-gradient(90deg, #7a0c00, #151311);
+        }
+        
+        .result-box {
+            background: rgba(20, 20, 35, 0.8);
+            border: 1px solid #3a3a5d;
+            border-radius: 6px;
+            padding: 15px;
+            min-height: 100px;
+            word-break: break-all;
+            font-family: monospace;
+            line-height: 1.5;
+            margin-top: 10px;
+        }
+        
+        .server-section {
+            background: rgba(20, 40, 60, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #3ECF8E;
+        }
+        
+        .security-warning {
+            background: rgba(140, 20, 50, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            border-left: 4px solid #ff4d7d;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #3a3a5d;
+            color: #a0a0c0;
+            font-size: 0.9rem;
+        }
+        
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #2ecc71;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 6px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .notification.error {
+            background: #e74c3c;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-online {
+            background: #2ecc71;
+        }
+        
+        .status-offline {
+            background: #e74c3c;
+        }
     </style>
-    <!-- Fallback if external CSS fails -->
-    <link rel="stylesheet" href="styles.css" onerror="console.log('External CSS failed to load, using inline styles')">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1><i class="fas fa-shield-alt"></i> Secure Encryption App</h1>
-            <p>Client-side encryption with Supabase storage</p>
+            <h1><i class="fas fa-lock"></i> Secure Encryption App</h1>
+            <p class="subtitle">Encrypt and decrypt text using AES-GCM with Web Crypto API</p>
+            <p id="supabaseStatus">
+                <span class="status-indicator status-offline" id="statusDot"></span>
+                <span id="statusText">Checking Supabase connection...</span>
+            </p>
         </header>
         
-        <div id="status">Loading app...</div>
-        
-        <div class="panel">
-            <h2><i class="fas fa-lock"></i> Encryption</h2>
-            <textarea id="inputText" rows="4" placeholder="Enter text to encrypt...">Test confidential data</textarea>
-            
-            <input type="password" id="encryptionKey" placeholder="Encryption key" value="MySecureKey123">
-            <button onclick="generateKey()"><i class="fas fa-key"></i> Generate Key</button>
-            
-            <div>
-                <button onclick="encryptText()" id="encryptBtn"><i class="fas fa-lock"></i> Encrypt</button>
-                <button onclick="decryptText()" id="decryptBtn"><i class="fas fa-unlock"></i> Decrypt</button>
+        <div class="app-container">
+            <!-- Left Panel: Encryption -->
+            <div class="panel">
+                <div class="panel-header">
+                    <i class="fas fa-edit"></i>
+                    <h2>Encryption & Decryption</h2>
+                </div>
+                
+                <div class="input-group">
+                    <label for="inputText">Text to encrypt or decrypt:</label>
+                    <textarea id="inputText" placeholder="Enter text to encrypt or paste encrypted JSON to decrypt...">This is a secret message</textarea>
+                </div>
+                
+                <div class="input-group">
+                    <label for="encryptionKey">Encryption Key:</label>
+                    <div class="key-container">
+                        <input type="text" id="encryptionKey" placeholder="Enter a secure key">
+                        <button class="btn-generate" id="generateKey">
+                            <i class="fas fa-key"></i> Generate
+                        </button>
+                    </div>
+                    <small style="color: #888; margin-top: 5px; display: block;">This key never leaves your browser</small>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn-encrypt" id="encryptBtn">
+                        <i class="fas fa-lock"></i> Encrypt
+                    </button>
+                    <button class="btn-decrypt" id="decryptBtn">
+                        <i class="fas fa-unlock"></i> Decrypt
+                    </button>
+                    <button class="btn-clear" id="clearBtn">
+                        <i class="fas fa-broom"></i> Clear
+                    </button>
+                </div>
+                
+                <div class="input-group">
+                    <label>Encrypted Result:</label>
+                    <div class="result-box" id="resultText">
+                        Encrypted/decrypted text will appear here...
+                    </div>
+                </div>
             </div>
             
-            <div id="encryptedResult" style="background: #2d2d44; padding: 15px; border-radius: 5px; margin-top: 15px; min-height: 50px; font-family: monospace;">
-                Encrypted data will appear here...
+            <!-- Right Panel: Supabase Storage -->
+            <div class="panel">
+                <div class="panel-header">
+                    <i class="fas fa-database"></i>
+                    <h2>Supabase Storage</h2>
+                </div>
+                
+                <div class="server-section">
+                    <h3><i class="fas fa-cloud"></i> Cloud Storage</h3>
+                    
+                    <div class="input-group">
+                        <label for="dataId">Data ID:</label>
+                        <div class="key-container">
+                            <input type="text" id="dataId" placeholder="unique-id-123" value="test-data-1">
+                            <button class="btn-generate" id="generateDataId">
+                                <i class="fas fa-hashtag"></i> Generate ID
+                            </button>
+                        </div>
+                        <small style="color: #888; margin-top: 5px; display: block;">Use this to retrieve data later</small>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="dataDescription">Description (optional):</label>
+                        <input type="text" id="dataDescription" placeholder="What's this encrypted data?">
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="btn-save" id="saveToSupabase">
+                            <i class="fas fa-cloud-upload-alt"></i> Save to Supabase
+                        </button>
+                        <button class="btn-load" id="loadFromSupabase">
+                            <i class="fas fa-cloud-download-alt"></i> Load from Supabase
+                        </button>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Server Response:</label>
+                        <div class="result-box" id="serverResponse">
+                            Supabase messages will appear here...
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="security-warning">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Security Notes</h3>
+                    <p>• Encryption key stays in your browser<br>
+                       • Supabase only stores encrypted data<br>
+                       • Data IDs should not reveal sensitive info<br>
+                       • Use HTTPS in production</p>
+                </div>
             </div>
         </div>
         
-        <div class="panel">
-            <h2><i class="fas fa-database"></i> Supabase Storage</h2>
-            <input type="text" id="dataId" placeholder="Data ID" value="test-data-1">
-            <input type="text" id="dataDescription" placeholder="Description (optional)">
-            
-            <div>
-                <button onclick="saveToSupabase()" id="saveBtn"><i class="fas fa-save"></i> Save to Supabase</button>
-                <button onclick="loadFromSupabase()" id="loadBtn"><i class="fas fa-download"></i> Load from Supabase</button>
-                <button onclick="clearData()"><i class="fas fa-trash"></i> Clear</button>
-            </div>
-            
-            <div id="supabaseResponse" style="background: #2d2d44; padding: 15px; border-radius: 5px; margin-top: 15px; min-height: 50px;">
-                Supabase response...
-            </div>
-            
-            <div id="decryptedResult" style="background: #2d2d44; padding: 15px; border-radius: 5px; margin-top: 15px; min-height: 50px; font-family: monospace;">
-                Decrypted data will appear here...
-            </div>
-        </div>
-        
-        <div id="securityWarning" style="background: rgba(140, 20, 50, 0.2); padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #ff4d7d;">
-            <h3><i class="fas fa-exclamation-triangle"></i> Security Note</h3>
-            <p>Your encryption key NEVER leaves your browser. All encryption/decryption happens locally.</p>
-        </div>
+        <footer>
+            <p>Secure Encryption App | All encryption/decryption happens locally in your browser</p>
+            <p>Connected to Supabase: plqvqenoroacvzwtgoxq</p>
+        </footer>
     </div>
+    
+    <div class="notification" id="notification"></div>
 
     <!-- Load Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <!-- Inline JavaScript as fallback -->
-    <script>
-        // Simple initialization
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('status').textContent = 'App loaded successfully!';
-            document.getElementById('status').className = 'success';
-        });
-    </script>
-    
-    <!-- Load external JS with fallback -->
-    <script src="app.js" onerror="loadFallbackJS()"></script>
-    
-    <script>
-        // Fallback if app.js fails to load
-        function loadFallbackJS() {
-            console.log('External JS failed, loading minimal functionality...');
-            document.getElementById('status').textContent = 'Loading basic functionality...';
-            
-            // Minimal working functions
-            window.generateKey = function() {
-                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-                let key = '';
-                for (let i = 0; i < 32; i++) {
-                    key += chars.charAt(Math.floor(Math.random() * chars.length));
-                }
-                document.getElementById('encryptionKey').value = key;
-                showStatus('Key generated!', 'success');
-            };
-            
-            window.showStatus = function(message, type) {
-                const status = document.getElementById('status');
-                status.textContent = message;
-                status.className = type;
-            };
-            
-            window.encryptText = function() {
-                showStatus('Please load the full app.js file for encryption', 'error');
-            };
-            
-            // More minimal functions...
-            showStatus('Loaded basic app. Some features may be limited.', 'info');
-        }
-    </script>
+    <!-- Load our app -->
+    <script src="app.js"></script>
 </body>
 </html>
