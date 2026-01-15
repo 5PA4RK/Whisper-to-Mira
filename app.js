@@ -3,10 +3,10 @@ console.log("=== ENCRYPTION APP STARTING ===");
 
 // Global variables
 let currentEncryptedData = null;
-let isKeyVisible = false;
+let isKeyVisible = false; // Track key visibility
 
 // DOM Elements
-let inputText, encryptionKey, resultDiv, statusDiv, keyStrength;
+let inputText, encryptionKey, resultDiv, statusDiv, toggleKeyBtn, keyStrength;
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', function() {
@@ -19,27 +19,25 @@ document.addEventListener('DOMContentLoaded', function() {
     statusDiv = document.getElementById('status');
     keyStrength = document.getElementById('keyStrength');
     
+    console.log("Elements found:", {
+        inputText: !!inputText,
+        encryptionKey: !!encryptionKey,
+        resultDiv: !!resultDiv,
+        statusDiv: !!statusDiv,
+        keyStrength: !!keyStrength
+    });
+    
     // Set initial values
     if (inputText) inputText.value = "";
     if (encryptionKey) {
         encryptionKey.value = "";
-        encryptionKey.type = 'password';
+        encryptionKey.type = 'password'; // Hide key by default
     }
-    if (statusDiv) statusDiv.textContent = "✅ App ready!";
+    if (statusDiv) statusDiv.textContent = "✅ App ready! Click 'Generate Key' or 'Encrypt' to start.";
     
     // Update key strength on input
     if (encryptionKey) {
         encryptionKey.addEventListener('input', updateKeyStrengthDisplay);
-    }
-    
-    // Clear encrypted data when input changes
-    if (inputText) {
-        inputText.addEventListener('input', function() {
-            currentEncryptedData = null;
-            if (resultDiv) {
-                resultDiv.innerHTML = '<div class="placeholder">Ready for new operation...</div>';
-            }
-        });
     }
     
     console.log("App initialized successfully!");
@@ -56,7 +54,7 @@ function generateKey() {
         }
         
         // Generate random bytes
-        const array = new Uint8Array(32); // Stronger 32-byte key
+        const array = new Uint8Array(24); // Increased length for stronger key
         window.crypto.getRandomValues(array);
         
         // Convert to base64 URL-safe format
@@ -65,146 +63,27 @@ function generateKey() {
             .replace(/\//g, '_')
             .replace(/=+$/, '');
         
-        // Set the key and clear old results
+        // Set the key
         encryptionKey.value = key;
-        currentEncryptedData = null;
         
-        // Update displays
+        // Update key strength display
         updateKeyStrengthDisplay();
         
+        // Update status
         if (statusDiv) {
-            statusDiv.innerHTML = '✅ Secure 256-bit key generated!';
+            statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> <span>✅ Secure key generated!</span>';
             statusDiv.className = 'status-bar status-success';
         }
         
-        // Show key in a separate alert (security sensitive)
-        showKeyInPopup(key);
+        console.log("Key generated:", key.substring(0, 10) + "...");
         
     } catch (error) {
         console.error("Key generation error:", error);
         if (statusDiv) {
-            statusDiv.innerHTML = '❌ Error generating key';
+            statusDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> <span>❌ Error generating key</span>';
             statusDiv.className = 'status-bar status-error';
         }
     }
-}
-
-// Show encryption key in a popup window (separate from main output)
-function showKeyInPopup(key) {
-    const popup = document.createElement('div');
-    popup.className = 'key-popup-overlay';
-    popup.innerHTML = `
-        <div class="key-popup">
-            <div class="key-popup-header">
-                <i class="fas fa-key"></i>
-                <h3>ENCRYPTION KEY GENERATED</h3>
-                <button class="close-popup" onclick="this.parentElement.parentElement.parentElement.remove()">&times;</button>
-            </div>
-            <div class="key-popup-content">
-                <p class="warning"><i class="fas fa-exclamation-triangle"></i> <strong>IMPORTANT:</strong> Save this key! You will need it to decrypt your data.</p>
-                
-                <div class="key-display">
-                    <label>Your Encryption Key:</label>
-                    <div class="key-value">${key}</div>
-                </div>
-                
-                <div class="key-actions">
-                    <button class="btn-primary" onclick="copyToClipboard('${key}')">
-                        <i class="fas fa-copy"></i> Copy Key
-                    </button>
-                    <button class="btn-secondary" onclick="downloadKey('${key}')">
-                        <i class="fas fa-download"></i> Download as .txt
-                    </button>
-                    <button class="btn-secondary" onclick="printKey('${key}')">
-                        <i class="fas fa-print"></i> Print Key
-                    </button>
-                </div>
-                
-                <div class="security-tips">
-                    <p><strong>Security Tips:</strong></p>
-                    <ul>
-                        <li>Store this key in a password manager</li>
-                        <li>Do not share this key with others</li>
-                        <li>Keep separate from encrypted data</li>
-                        <li>Make a backup in a secure location</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(popup);
-}
-
-// Copy text to clipboard
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        alert("✅ Key copied to clipboard!");
-    }).catch(err => {
-        console.error('Copy failed:', err);
-        alert("Could not copy to clipboard. Please select and copy manually.");
-    });
-}
-
-// Download key as text file
-function downloadKey(key) {
-    const blob = new Blob([`ENCRYPTION KEY\n================\n\nKey: ${key}\n\nGenerated: ${new Date().toLocaleString()}\n\n⚠️ IMPORTANT: Keep this file secure!`], 
-        { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `encryption-key-${Date.now()}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-}
-
-// Print key
-function printKey(key) {
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(`
-        <html>
-        <head>
-            <title>Encryption Key</title>
-            <style>
-                body { font-family: Arial, sans-serif; padding: 20px; }
-                .key-box { 
-                    background: #f5f5f5; 
-                    padding: 15px; 
-                    border: 2px dashed #333; 
-                    margin: 20px 0; 
-                    word-break: break-all;
-                    font-family: monospace;
-                }
-                .warning { color: #d32f2f; font-weight: bold; }
-                @media print {
-                    .no-print { display: none; }
-                }
-            </style>
-        </head>
-        <body>
-            <h1>🔐 Encryption Key</h1>
-            <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
-            
-            <div class="warning">⚠️ IMPORTANT: Keep this document secure!</div>
-            
-            <h2>Your Encryption Key:</h2>
-            <div class="key-box">${key}</div>
-            
-            <p><strong>Instructions:</strong></p>
-            <ul>
-                <li>Store in a secure location</li>
-                <li>Keep separate from encrypted data</li>
-                <li>Required for decryption</li>
-            </ul>
-            
-            <button class="no-print" onclick="window.print()">Print</button>
-            <button class="no-print" onclick="window.close()">Close</button>
-        </body>
-        </html>
-    `);
-    printWindow.document.close();
 }
 
 // Update key strength display
@@ -216,19 +95,19 @@ function updateKeyStrengthDisplay() {
     let className = "key-weak";
     
     if (key.length === 0) {
-        strength = "None";
+        strength = "Auto-generated";
         className = "";
-    } else if (key.length >= 32) {
-        strength = "Excellent";
-        className = "key-strong";
     } else if (key.length >= 16) {
         strength = "Strong";
         className = "key-strong";
     } else if (key.length >= 8) {
-        strength = "Good";
-        className = "key-good";
-    } else {
+        strength = "Medium";
+        className = "key-good"; // Changed from "key-medium" to match CSS
+    } else if (key.length >= 4) {
         strength = "Weak";
+        className = "key-weak";
+    } else {
+        strength = "Too Short";
         className = "key-weak";
     }
     
@@ -272,10 +151,10 @@ async function encryptText() {
         
         // Update UI
         if (resultDiv) {
-            resultDiv.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Encrypting your data...</div>';
+            resultDiv.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Encrypting...</div>';
         }
         if (statusDiv) {
-            statusDiv.innerHTML = '⏳ Encrypting...';
+            statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>⏳ Encrypting...</span>';
             statusDiv.className = 'status-bar status-info';
         }
         
@@ -320,85 +199,89 @@ async function encryptText() {
         const encryptedBase64 = btoa(String.fromCharCode.apply(null, encryptedBytes));
         const ivBase64 = btoa(String.fromCharCode.apply(null, iv));
         
-        // Store new encrypted data
+        // Store for later use
         currentEncryptedData = {
             iv: ivBase64,
             data: encryptedBase64,
             algorithm: "AES-GCM-256",
-            timestamp: new Date().toISOString(),
-            dataLength: text.length
+            timestamp: new Date().toISOString()
         };
         
-        // SIMPLIFIED OUTPUT - Easy to copy format
-        const exportText = `🔐 ENCRYPTED DATA
-=====================
-Encrypted: ${new Date().toLocaleString()}
-Algorithm: AES-256-GCM
-Data Size: ${text.length} characters
-
-ENCRYPTED CONTENT:
-${encryptedBase64}
-
-IV (Required for decryption):
-${ivBase64}
-
-⚠️ Keep this data separate from your encryption key!
-=====================
-Need to decrypt? Use the same key with this data.`;
+        // Create nicely formatted export text
+        const exportText = `🔐 SECURE ENCRYPTION EXPORT 🔐
         
-        // Display results in large, easy-to-copy format
+ENCRYPTION DETAILS:
+=====================
+Algorithm: ${currentEncryptedData.algorithm}
+Timestamp: ${new Date(currentEncryptedData.timestamp).toLocaleString()}
+Key Strength: ${getKeyStrength(keyString)}
+
+ENCRYPTED DATA:
+=====================
+${currentEncryptedData.data}
+
+INITIALIZATION VECTOR (IV):
+=====================
+${currentEncryptedData.iv}
+
+FULL JSON DATA (for import):
+=====================
+${JSON.stringify(currentEncryptedData, null, 2)}
+
+🔐 END OF ENCRYPTED DATA 🔐
+
+⚠️ IMPORTANT NOTES:
+- Keep this data secure
+- The IV is needed for decryption
+- Store the encryption key separately
+- This export does NOT contain the encryption key`;
+
+        // Format and display result
         if (resultDiv) {
             const formattedResult = `
-<div class="result-container">
-    <div class="result-header success">
-        <i class="fas fa-shield-alt"></i>
-        <h3>ENCRYPTION SUCCESSFUL</h3>
+<div class="encrypted-result">
+    <div class="result-header">
+        <i class="fas fa-shield-alt"></i> Encrypted Data
     </div>
-    
-    <div class="result-summary">
-        <div class="summary-item">
-            <span class="summary-label">Original Text:</span>
-            <div class="summary-value">${text.length > 50 ? text.substring(0, 50) + '...' : text}</div>
+    <div class="result-grid">
+        <div class="result-item">
+            <span class="result-label">Algorithm:</span>
+            <span class="result-value">${currentEncryptedData.algorithm}</span>
         </div>
-        <div class="summary-item">
-            <span class="summary-label">Key Strength:</span>
-            <span class="summary-value key-${getKeyStrength(keyString)}">${getKeyStrength(keyString)}</span>
+        <div class="result-item">
+            <span class="result-label">Timestamp:</span>
+            <span class="result-value">${new Date(currentEncryptedData.timestamp).toLocaleString()}</span>
         </div>
-        <div class="summary-item">
-            <span class="summary-label">Encrypted Size:</span>
-            <div class="summary-value">${encryptedBase64.length} characters</div>
+        <div class="result-item">
+            <span class="result-label">Key Strength:</span>
+            <span class="result-value key-${getKeyStrength(keyString).toLowerCase()}">${getKeyStrength(keyString)}</span>
         </div>
-    </div>
-    
-    <div class="export-section">
-        <h4><i class="fas fa-copy"></i> ENCRYPTED DATA (Copy All):</h4>
-        <textarea class="export-textarea" readonly rows="8">${exportText}</textarea>
-        
-        <div class="export-actions">
-            <button class="btn-primary" onclick="copyExportText()">
-                <i class="fas fa-copy"></i> Copy All
-            </button>
-            <button class="btn-secondary" onclick="downloadEncryptedData('${encryptedBase64}', '${ivBase64}')">
-                <i class="fas fa-download"></i> Download
-            </button>
-            <button class="btn-secondary" onclick="shareEncryptedData()">
-                <i class="fas fa-share"></i> Share
-            </button>
+        <div class="result-item">
+            <span class="result-label">Encrypted Data:</span>
+            <div class="encrypted-data">${currentEncryptedData.data.substring(0, 100)}${currentEncryptedData.data.length > 100 ? '...' : ''}</div>
         </div>
-    </div>
-    
-    <div class="security-notice">
-        <i class="fas fa-exclamation-triangle"></i>
-        <p><strong>Important:</strong> Your encryption key is not shown here for security. Keep your key separate from this encrypted data.</p>
+        <div class="result-item">
+            <span class="result-label">IV (Initialization Vector):</span>
+            <div class="encrypted-data">${currentEncryptedData.iv}</div>
+        </div>
+        <div class="result-item full-width">
+            <span class="result-label">Export Format:</span>
+            <textarea readonly class="full-data export-textarea">${exportText}</textarea>
+            <div class="export-format-label">
+                <i class="fas fa-info-circle"></i> This format is optimized for copying and sharing
+            </div>
+        </div>
+        <div class="result-item full-width">
+            <span class="result-label">Full JSON Data:</span>
+            <textarea readonly class="full-data">${JSON.stringify(currentEncryptedData, null, 2)}</textarea>
+        </div>
     </div>
 </div>`;
             resultDiv.innerHTML = formattedResult;
-            // Auto-scroll to results
-            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
         
         if (statusDiv) {
-            statusDiv.innerHTML = '✅ Text encrypted successfully!';
+            statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> <span>✅ Text encrypted successfully!</span>';
             statusDiv.className = 'status-bar status-success';
         }
         
@@ -407,53 +290,23 @@ Need to decrypt? Use the same key with this data.`;
     } catch (error) {
         console.error("Encryption error:", error);
         
-        currentEncryptedData = null;
-        
         if (resultDiv) {
-            resultDiv.innerHTML = '<div class="error-message"><i class="fas fa-exclamation-triangle"></i> Encryption failed: ' + error.message + '</div>';
+            resultDiv.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-triangle"></i> Error: ${error.message}</div>`;
         }
         if (statusDiv) {
-            statusDiv.innerHTML = '❌ Encryption failed';
+            statusDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> <span>❌ Encryption failed</span>';
             statusDiv.className = 'status-bar status-error';
         }
     }
 }
 
-// Helper function to get key strength
+// Helper function to get key strength text
 function getKeyStrength(key) {
-    if (!key) return "none";
-    if (key.length >= 32) return "excellent";
-    if (key.length >= 16) return "strong";
-    if (key.length >= 8) return "good";
-    return "weak";
-}
-
-// Copy export text to clipboard
-function copyExportText() {
-    const textarea = document.querySelector('.export-textarea');
-    if (textarea) {
-        copyToClipboard(textarea.value);
-    }
-}
-
-// Download encrypted data
-function downloadEncryptedData(encryptedData, iv) {
-    const data = {
-        encrypted: encryptedData,
-        iv: iv,
-        algorithm: "AES-256-GCM",
-        timestamp: new Date().toISOString()
-    };
-    
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `encrypted-data-${Date.now()}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    if (!key) return "None";
+    if (key.length >= 16) return "Strong";
+    if (key.length >= 8) return "Medium";
+    if (key.length >= 4) return "Weak";
+    return "Too Short";
 }
 
 // Decrypt text
@@ -469,50 +322,24 @@ async function decryptText() {
             return;
         }
         
-        // Check input for encrypted data
-        const inputTextValue = inputText ? inputText.value.trim() : "";
-        let encryptedDataToUse = null;
-        
-        if (inputTextValue) {
-            // Try to parse as JSON first
+        // Check if we have encrypted data
+        if (!currentEncryptedData) {
+            const inputTextValue = inputText ? inputText.value.trim() : "";
+            if (!inputTextValue) {
+                alert("No encrypted data available. Encrypt something first or paste encrypted data.");
+                return;
+            }
+            
+            // Try to parse encrypted data from input
             try {
-                const parsed = JSON.parse(inputTextValue);
-                if (parsed.data && parsed.iv) {
-                    encryptedDataToUse = parsed;
+                currentEncryptedData = JSON.parse(inputTextValue);
+                if (!currentEncryptedData.data || !currentEncryptedData.iv) {
+                    throw new Error("Invalid encrypted data format");
                 }
             } catch (e) {
-                // Not JSON, check if it's just base64
-                if (inputTextValue.length > 50 && /^[A-Za-z0-9+/=]+$/.test(inputTextValue.split('\n')[0])) {
-                    // Might be our export format - try to extract
-                    const lines = inputTextValue.split('\n');
-                    let data = '', iv = '';
-                    
-                    for (let i = 0; i < lines.length; i++) {
-                        if (lines[i].includes('ENCRYPTED CONTENT:')) {
-                            for (let j = i + 1; j < lines.length && lines[j] && !lines[j].includes('IV'); j++) {
-                                data += lines[j].trim();
-                            }
-                        }
-                        if (lines[i].includes('IV (Required for decryption):')) {
-                            iv = lines[i + 1] ? lines[i + 1].trim() : '';
-                        }
-                    }
-                    
-                    if (data && iv) {
-                        encryptedDataToUse = { data, iv };
-                    }
-                }
+                alert("No valid encrypted data found. Please encrypt something first.");
+                return;
             }
-        }
-        
-        // Use stored data if available and input is empty
-        if (!encryptedDataToUse && currentEncryptedData) {
-            encryptedDataToUse = currentEncryptedData;
-        }
-        
-        if (!encryptedDataToUse) {
-            alert("No encrypted data found. Please paste the encrypted data in the input field.\n\nFormat can be:\n1. Full JSON object\n2. The export format from this app\n3. Just the encrypted base64 string (if you have the IV)");
-            return;
         }
         
         // Update UI
@@ -520,7 +347,7 @@ async function decryptText() {
             resultDiv.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Decrypting...</div>';
         }
         if (statusDiv) {
-            statusDiv.innerHTML = '⏳ Decrypting...';
+            statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>⏳ Decrypting...</span>';
             statusDiv.className = 'status-bar status-info';
         }
         
@@ -547,8 +374,8 @@ async function decryptText() {
         );
         
         // Convert from base64
-        const iv = new Uint8Array(atob(encryptedDataToUse.iv).split('').map(c => c.charCodeAt(0)));
-        const encryptedBytes = new Uint8Array(atob(encryptedDataToUse.data).split('').map(c => c.charCodeAt(0)));
+        const iv = new Uint8Array(atob(currentEncryptedData.iv).split('').map(c => c.charCodeAt(0)));
+        const encryptedData = new Uint8Array(atob(currentEncryptedData.data).split('').map(c => c.charCodeAt(0)));
         
         // Decrypt
         const decryptedData = await crypto.subtle.decrypt(
@@ -557,79 +384,106 @@ async function decryptText() {
                 iv: iv
             },
             key,
-            encryptedBytes
+            encryptedData
         );
         
         // Convert to text
         const decryptedText = new TextDecoder().decode(decryptedData);
         
-        // SIMPLIFIED DECRYPTION OUTPUT
-        const decryptedExport = `🔓 DECRYPTED MESSAGE
-=====================
-Decrypted: ${new Date().toLocaleString()}
-Algorithm: AES-256-GCM
-Key Strength: ${getKeyStrength(keyString).toUpperCase()}
+        // Format and display result
+        if (resultDiv) {
+            const formattedResult = `
+<div class="decrypted-result">
+    <div class="result-header">
+        <i class="fas fa-unlock"></i> Decrypted Text
+    </div>
+    <div class="result-grid">
+        <div class="result-item">
+            <span class="result-label">Algorithm:</span>
+            <span class="result-value">${currentEncryptedData.algorithm || 'AES-GCM'}</span>
+        </div>
+        <div class="result-item">
+            <span class="result-label">Timestamp:</span>
+            <span class="result-value">${currentEncryptedData.timestamp ? new Date(currentEncryptedData.timestamp).toLocaleString() : 'Unknown'}</span>
+        </div>
+        <div class="result-item full-width">
+            <span class="result-label">Decrypted Message:</span>
+            <div class="decrypted-message">${decryptedText}</div>
+        </div>
+        <div class="result-item full-width">
+            <span class="result-label">Export Format:</span>
+            <textarea readonly class="full-data export-textarea">🔓 DECRYPTED MESSAGE 🔓
+            
+TIMESTAMP: ${new Date().toLocaleString()}
+ALGORITHM: ${currentEncryptedData.algorithm || 'AES-GCM'}
 
-ORIGINAL MESSAGE:
+DECRYPTED TEXT:
 =====================
 ${decryptedText}
 
 =====================
-✅ Decryption successful using ${keyString.length}-character key`;
-        
-        if (resultDiv) {
-            const formattedResult = `
-<div class="result-container">
-    <div class="result-header success">
-        <i class="fas fa-unlock"></i>
-        <h3>DECRYPTION SUCCESSFUL</h3>
-    </div>
-    
-    <div class="decrypted-content">
-        <h4><i class="fas fa-file-alt"></i> Decrypted Text:</h4>
-        <div class="message-display">${decryptedText}</div>
-    </div>
-    
-    <div class="export-section">
-        <h4><i class="fas fa-copy"></i> COPY FORMAT:</h4>
-        <textarea class="export-textarea" readonly rows="6">${decryptedExport}</textarea>
-        
-        <div class="export-actions">
-            <button class="btn-primary" onclick="copyExportText()">
-                <i class="fas fa-copy"></i> Copy All
-            </button>
-            <button class="btn-secondary" onclick="copyToClipboard('${decryptedText.replace(/'/g, "\\'")}')">
-                <i class="fas fa-copy"></i> Copy Text Only
-            </button>
+✅ Decryption successful
+🔓 END OF DECRYPTED MESSAGE 🔓</textarea>
+            <div class="export-format-label">
+                <i class="fas fa-info-circle"></i> Copy-friendly format for sharing decrypted content
+            </div>
         </div>
     </div>
 </div>`;
             resultDiv.innerHTML = formattedResult;
-            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
         
         if (statusDiv) {
-            statusDiv.innerHTML = '✅ Text decrypted successfully!';
+            statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> <span>✅ Text decrypted successfully!</span>';
             statusDiv.className = 'status-bar status-success';
         }
-        
-        currentEncryptedData = null;
         
         console.log("Decryption successful!");
         
     } catch (error) {
         console.error("Decryption error:", error);
         
-        currentEncryptedData = null;
-        
         if (resultDiv) {
-            resultDiv.innerHTML = '<div class="error-message"><i class="fas fa-exclamation-triangle"></i> Decryption failed. Please check:<br>1. Your encryption key<br>2. The encrypted data format<br>3. That the IV is included</div>';
+            resultDiv.innerHTML = '<div class="error-message"><i class="fas fa-exclamation-triangle"></i> Error: Decryption failed. Please check your encryption key.</div>';
         }
         if (statusDiv) {
-            statusDiv.innerHTML = '❌ Wrong key or invalid data';
+            statusDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> <span>❌ Decryption failed - Wrong key or corrupted data</span>';
             statusDiv.className = 'status-bar status-error';
         }
     }
+}
+
+// Copy result to clipboard
+function copyResult() {
+    if (!resultDiv) return;
+    
+    let textToCopy = "";
+    const textarea = resultDiv.querySelector('textarea');
+    if (textarea) {
+        textToCopy = textarea.value;
+    } else {
+        textToCopy = resultDiv.textContent || resultDiv.innerText;
+    }
+    
+    navigator.clipboard.writeText(textToCopy).then(() => {
+        const btn = document.querySelector('.btn-outline:nth-child(1)');
+        if (btn) {
+            const original = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            setTimeout(() => btn.innerHTML = original, 2000);
+        }
+        
+        if (statusDiv) {
+            statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> <span>✅ Result copied to clipboard!</span>';
+            statusDiv.className = 'status-bar status-success';
+            setTimeout(() => {
+                statusDiv.innerHTML = '<i class="fas fa-info-circle"></i> <span>✅ App ready</span>';
+                statusDiv.className = 'status-bar status-info';
+            }, 3000);
+        }
+    }).catch(err => {
+        console.error('Copy failed:', err);
+    });
 }
 
 // Clear all fields
@@ -643,14 +497,14 @@ function clearAll() {
         isKeyVisible = false;
     }
     if (resultDiv) {
-        resultDiv.innerHTML = '<div class="placeholder"><i class="fas fa-info-circle"></i><br>Results will appear here<br><small>Encrypt or decrypt text to see results</small></div>';
+        resultDiv.innerHTML = "<div class='placeholder'>Results will appear here after encryption or decryption...</div>";
     }
     if (statusDiv) {
-        statusDiv.innerHTML = '✅ Cleared! Ready for new operation.';
+        statusDiv.innerHTML = '<i class="fas fa-info-circle"></i> <span>✅ Cleared! Ready to start again.</span>';
         statusDiv.className = 'status-bar status-info';
     }
     if (keyStrength) {
-        keyStrength.textContent = "None";
+        keyStrength.textContent = "Auto-generated";
         keyStrength.className = "key-strength";
     }
     
@@ -658,10 +512,6 @@ function clearAll() {
     if (toggleBtn) {
         toggleBtn.innerHTML = '<i class="fas fa-eye"></i>';
     }
-    
-    // Remove any popups
-    const popups = document.querySelectorAll('.key-popup-overlay');
-    popups.forEach(popup => popup.remove());
     
     currentEncryptedData = null;
 }
@@ -673,10 +523,5 @@ window.decryptText = decryptText;
 window.clearAll = clearAll;
 window.copyResult = copyResult;
 window.toggleKeyVisibility = toggleKeyVisibility;
-window.copyToClipboard = copyToClipboard;
-window.downloadKey = downloadKey;
-window.printKey = printKey;
-window.copyExportText = copyExportText;
-window.downloadEncryptedData = downloadEncryptedData;
 
 console.log("=== ENCRYPTION APP LOADED ===");
