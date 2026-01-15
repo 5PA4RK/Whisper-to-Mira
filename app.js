@@ -208,37 +208,108 @@ async function encryptText() {
         };
         
         // Format and display result
-        if (resultDiv) {
-            const formattedResult = `
+// Format and display result
+if (resultDiv) {
+    const formattedResult = `
 <div class="encrypted-result">
     <div class="result-header">
-        <i class="fas fa-shield-alt"></i> Encrypted Data
+        <i class="fas fa-shield-alt"></i> ENCRYPTED DATA EXPORT
+        <div class="export-info">Generated: ${new Date(currentEncryptedData.timestamp).toLocaleString()}</div>
     </div>
+    
     <div class="result-grid">
-        <div class="result-item">
-            <span class="result-label">Algorithm:</span>
-            <span class="result-value">${currentEncryptedData.algorithm}</span>
+        <!-- Metadata Section -->
+        <div class="result-section">
+            <div class="section-title">METADATA</div>
+            <div class="result-item">
+                <span class="result-label">Algorithm:</span>
+                <span class="result-value">${currentEncryptedData.algorithm}</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Key Strength:</span>
+                <span class="result-value">${keyStrength.textContent}</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Generated:</span>
+                <span class="result-value">${new Date(currentEncryptedData.timestamp).toLocaleString()}</span>
+            </div>
         </div>
-        <div class="result-item">
-            <span class="result-label">Timestamp:</span>
-            <span class="result-value">${new Date(currentEncryptedData.timestamp).toLocaleString()}</span>
+        
+        <!-- Encrypted Content Section -->
+        <div class="result-section">
+            <div class="section-title">ENCRYPTED CONTENT</div>
+            <div class="result-item full-width">
+                <span class="result-label">Encrypted Data:</span>
+                <div class="data-block encrypted-data">
+                    ${currentEncryptedData.data}
+                </div>
+                <div class="data-info">Length: ${currentEncryptedData.data.length} characters</div>
+            </div>
+            
+            <div class="result-item full-width">
+                <span class="result-label">Initialization Vector (IV):</span>
+                <div class="data-block iv-data">
+                    ${currentEncryptedData.iv}
+                </div>
+                <div class="data-info">Used for AES-GCM encryption security</div>
+            </div>
         </div>
-        <div class="result-item">
-            <span class="result-label">Encrypted Data:</span>
-            <div class="encrypted-data">${currentEncryptedData.data.substring(0, 100)}${currentEncryptedData.data.length > 100 ? '...' : ''}</div>
+        
+        <!-- Export Formats -->
+        <div class="result-section">
+            <div class="section-title">EXPORT FORMATS</div>
+            
+            <div class="format-option">
+                <div class="format-header">
+                    <i class="fas fa-code"></i> JSON Format (Recommended)
+                </div>
+                <textarea readonly class="export-json">${JSON.stringify(currentEncryptedData, null, 2)}</textarea>
+            </div>
+            
+            <div class="format-option">
+                <div class="format-header">
+                    <i class="fas fa-file-alt"></i> Text Format
+                </div>
+                <textarea readonly class="export-text">--- SECURE ENCRYPTION EXPORT ---
+Algorithm: ${currentEncryptedData.algorithm}
+Timestamp: ${new Date(currentEncryptedData.timestamp).toISOString()}
+Key Strength: ${keyStrength.textContent}
+
+ENCRYPTED_DATA:
+${currentEncryptedData.data}
+
+INITIALIZATION_VECTOR:
+${currentEncryptedData.iv}
+
+--- END ENCRYPTED DATA ---
+IMPORTANT: Keep this data secure. The IV is required for decryption.</textarea>
+            </div>
+            
+            <div class="format-option">
+                <div class="format-header">
+                    <i class="fas fa-link"></i> Single Line Format (For URLs/Sharing)
+                </div>
+                <textarea readonly class="export-compact">${btoa(JSON.stringify(currentEncryptedData))}</textarea>
+                <div class="data-info">Base64 encoded JSON - Decode with atob() then parse JSON</div>
+            </div>
         </div>
-        <div class="result-item">
-            <span class="result-label">IV (Initialization Vector):</span>
-            <div class="encrypted-data">${currentEncryptedData.iv}</div>
-        </div>
-        <div class="result-item full-width">
-            <span class="result-label">Full Data:</span>
-            <textarea readonly class="full-data">${JSON.stringify(currentEncryptedData, null, 2)}</textarea>
+        
+        <!-- Export Actions -->
+        <div class="export-actions">
+            <button class="btn btn-outline" onclick="copyExport('json')">
+                <i class="fas fa-copy"></i> Copy JSON
+            </button>
+            <button class="btn btn-outline" onclick="copyExport('text')">
+                <i class="fas fa-copy"></i> Copy Text Format
+            </button>
+            <button class="btn btn-outline" onclick="downloadExport()">
+                <i class="fas fa-download"></i> Download as File
+            </button>
         </div>
     </div>
 </div>`;
-            resultDiv.innerHTML = formattedResult;
-        }
+    resultDiv.innerHTML = formattedResult;
+}
         
         if (statusDiv) {
             statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> <span>✅ Text encrypted successfully!</span>';
