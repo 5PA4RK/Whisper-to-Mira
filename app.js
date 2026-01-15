@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
         encryptionKey.value = "";
         encryptionKey.type = 'password';
     }
-    if (statusDiv) statusDiv.textContent = "✅ Ready";
+    if (statusDiv) statusDiv.textContent = "✅ App ready!";
     
     // Update key strength on input
     if (encryptionKey) {
@@ -36,6 +36,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (inputText) {
         inputText.addEventListener('input', function() {
             currentEncryptedData = null;
+            if (resultDiv) {
+                resultDiv.innerHTML = '<div class="placeholder">Ready for new operation...</div>';
+            }
         });
     }
     
@@ -53,7 +56,7 @@ function generateKey() {
         }
         
         // Generate random bytes
-        const array = new Uint8Array(24);
+        const array = new Uint8Array(32); // Stronger 32-byte key
         window.crypto.getRandomValues(array);
         
         // Convert to base64 URL-safe format
@@ -62,34 +65,146 @@ function generateKey() {
             .replace(/\//g, '_')
             .replace(/=+$/, '');
         
-        // Set the key
+        // Set the key and clear old results
         encryptionKey.value = key;
         currentEncryptedData = null;
         
+        // Update displays
         updateKeyStrengthDisplay();
         
         if (statusDiv) {
-            statusDiv.innerHTML = '✅ Key generated';
+            statusDiv.innerHTML = '✅ Secure 256-bit key generated!';
             statusDiv.className = 'status-bar status-success';
         }
         
-        if (resultDiv) {
-            resultDiv.innerHTML = `
-                <div class="simple-result">
-                    <div class="result-title">🔑 New Encryption Key Generated</div>
-                    <textarea class="copy-box" readonly>${key}</textarea>
-                    <div class="hint">Copy this key and keep it safe!</div>
-                </div>
-            `;
-        }
+        // Show key in a separate alert (security sensitive)
+        showKeyInPopup(key);
         
     } catch (error) {
         console.error("Key generation error:", error);
         if (statusDiv) {
-            statusDiv.innerHTML = '❌ Error';
+            statusDiv.innerHTML = '❌ Error generating key';
             statusDiv.className = 'status-bar status-error';
         }
     }
+}
+
+// Show encryption key in a popup window (separate from main output)
+function showKeyInPopup(key) {
+    const popup = document.createElement('div');
+    popup.className = 'key-popup-overlay';
+    popup.innerHTML = `
+        <div class="key-popup">
+            <div class="key-popup-header">
+                <i class="fas fa-key"></i>
+                <h3>ENCRYPTION KEY GENERATED</h3>
+                <button class="close-popup" onclick="this.parentElement.parentElement.parentElement.remove()">&times;</button>
+            </div>
+            <div class="key-popup-content">
+                <p class="warning"><i class="fas fa-exclamation-triangle"></i> <strong>IMPORTANT:</strong> Save this key! You will need it to decrypt your data.</p>
+                
+                <div class="key-display">
+                    <label>Your Encryption Key:</label>
+                    <div class="key-value">${key}</div>
+                </div>
+                
+                <div class="key-actions">
+                    <button class="btn-primary" onclick="copyToClipboard('${key}')">
+                        <i class="fas fa-copy"></i> Copy Key
+                    </button>
+                    <button class="btn-secondary" onclick="downloadKey('${key}')">
+                        <i class="fas fa-download"></i> Download as .txt
+                    </button>
+                    <button class="btn-secondary" onclick="printKey('${key}')">
+                        <i class="fas fa-print"></i> Print Key
+                    </button>
+                </div>
+                
+                <div class="security-tips">
+                    <p><strong>Security Tips:</strong></p>
+                    <ul>
+                        <li>Store this key in a password manager</li>
+                        <li>Do not share this key with others</li>
+                        <li>Keep separate from encrypted data</li>
+                        <li>Make a backup in a secure location</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(popup);
+}
+
+// Copy text to clipboard
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        alert("✅ Key copied to clipboard!");
+    }).catch(err => {
+        console.error('Copy failed:', err);
+        alert("Could not copy to clipboard. Please select and copy manually.");
+    });
+}
+
+// Download key as text file
+function downloadKey(key) {
+    const blob = new Blob([`ENCRYPTION KEY\n================\n\nKey: ${key}\n\nGenerated: ${new Date().toLocaleString()}\n\n⚠️ IMPORTANT: Keep this file secure!`], 
+        { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `encryption-key-${Date.now()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// Print key
+function printKey(key) {
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>Encryption Key</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 20px; }
+                .key-box { 
+                    background: #f5f5f5; 
+                    padding: 15px; 
+                    border: 2px dashed #333; 
+                    margin: 20px 0; 
+                    word-break: break-all;
+                    font-family: monospace;
+                }
+                .warning { color: #d32f2f; font-weight: bold; }
+                @media print {
+                    .no-print { display: none; }
+                }
+            </style>
+        </head>
+        <body>
+            <h1>🔐 Encryption Key</h1>
+            <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+            
+            <div class="warning">⚠️ IMPORTANT: Keep this document secure!</div>
+            
+            <h2>Your Encryption Key:</h2>
+            <div class="key-box">${key}</div>
+            
+            <p><strong>Instructions:</strong></p>
+            <ul>
+                <li>Store in a secure location</li>
+                <li>Keep separate from encrypted data</li>
+                <li>Required for decryption</li>
+            </ul>
+            
+            <button class="no-print" onclick="window.print()">Print</button>
+            <button class="no-print" onclick="window.close()">Close</button>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
 }
 
 // Update key strength display
@@ -103,11 +218,14 @@ function updateKeyStrengthDisplay() {
     if (key.length === 0) {
         strength = "None";
         className = "";
+    } else if (key.length >= 32) {
+        strength = "Excellent";
+        className = "key-strong";
     } else if (key.length >= 16) {
         strength = "Strong";
         className = "key-strong";
     } else if (key.length >= 8) {
-        strength = "Medium";
+        strength = "Good";
         className = "key-good";
     } else {
         strength = "Weak";
@@ -138,9 +256,11 @@ async function encryptText() {
     console.log("Starting encryption...");
     
     try {
+        // Get values
         const text = inputText ? inputText.value.trim() : "";
         const keyString = encryptionKey ? encryptionKey.value.trim() : "";
         
+        // Validate
         if (!text) {
             alert("Please enter text to encrypt");
             return;
@@ -151,7 +271,9 @@ async function encryptText() {
         }
         
         // Update UI
-        if (resultDiv) resultDiv.innerHTML = '<div class="loading">Encrypting...</div>';
+        if (resultDiv) {
+            resultDiv.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Encrypting your data...</div>';
+        }
         if (statusDiv) {
             statusDiv.innerHTML = '⏳ Encrypting...';
             statusDiv.className = 'status-bar status-info';
@@ -180,10 +302,15 @@ async function encryptText() {
             ["encrypt", "decrypt"]
         );
         
-        // Generate IV and encrypt
+        // Generate IV
         const iv = crypto.getRandomValues(new Uint8Array(12));
+        
+        // Encrypt
         const encryptedData = await crypto.subtle.encrypt(
-            { name: "AES-GCM", iv: iv },
+            {
+                name: "AES-GCM",
+                iv: iv
+            },
             key,
             new TextEncoder().encode(text)
         );
@@ -193,61 +320,140 @@ async function encryptText() {
         const encryptedBase64 = btoa(String.fromCharCode.apply(null, encryptedBytes));
         const ivBase64 = btoa(String.fromCharCode.apply(null, iv));
         
-        // Store data
+        // Store new encrypted data
         currentEncryptedData = {
             iv: ivBase64,
             data: encryptedBase64,
             algorithm: "AES-GCM-256",
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            dataLength: text.length
         };
         
-        // Create clean, copy-friendly output
-        const outputText = `🔐 ENCRYPTED DATA 🔐
+        // SIMPLIFIED OUTPUT - Easy to copy format
+        const exportText = `🔐 ENCRYPTED DATA
+=====================
+Encrypted: ${new Date().toLocaleString()}
+Algorithm: AES-256-GCM
+Data Size: ${text.length} characters
 
-📝 Original: ${text.substring(0, 50)}${text.length > 50 ? '...' : ''}
-🔑 Key: ${keyString}
-📅 Time: ${new Date().toLocaleString()}
-
-=== ENCRYPTED CONTENT ===
+ENCRYPTED CONTENT:
 ${encryptedBase64}
 
-=== INITIALIZATION VECTOR ===
+IV (Required for decryption):
 ${ivBase64}
 
-=== FULL DATA (JSON) ===
-${JSON.stringify(currentEncryptedData, null, 2)}
-
-⚠️ Keep your key and IV secure!
-Use this data with the same key to decrypt.`;
+⚠️ Keep this data separate from your encryption key!
+=====================
+Need to decrypt? Use the same key with this data.`;
         
-        // Display result
+        // Display results in large, easy-to-copy format
         if (resultDiv) {
-            resultDiv.innerHTML = `
-                <div class="simple-result">
-                    <div class="result-title">🔒 Encryption Complete</div>
-                    <textarea class="copy-box" readonly>${outputText}</textarea>
-                    <div class="hint">Copy everything above for safekeeping</div>
-                </div>
-            `;
+            const formattedResult = `
+<div class="result-container">
+    <div class="result-header success">
+        <i class="fas fa-shield-alt"></i>
+        <h3>ENCRYPTION SUCCESSFUL</h3>
+    </div>
+    
+    <div class="result-summary">
+        <div class="summary-item">
+            <span class="summary-label">Original Text:</span>
+            <div class="summary-value">${text.length > 50 ? text.substring(0, 50) + '...' : text}</div>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">Key Strength:</span>
+            <span class="summary-value key-${getKeyStrength(keyString)}">${getKeyStrength(keyString)}</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">Encrypted Size:</span>
+            <div class="summary-value">${encryptedBase64.length} characters</div>
+        </div>
+    </div>
+    
+    <div class="export-section">
+        <h4><i class="fas fa-copy"></i> ENCRYPTED DATA (Copy All):</h4>
+        <textarea class="export-textarea" readonly rows="8">${exportText}</textarea>
+        
+        <div class="export-actions">
+            <button class="btn-primary" onclick="copyExportText()">
+                <i class="fas fa-copy"></i> Copy All
+            </button>
+            <button class="btn-secondary" onclick="downloadEncryptedData('${encryptedBase64}', '${ivBase64}')">
+                <i class="fas fa-download"></i> Download
+            </button>
+            <button class="btn-secondary" onclick="shareEncryptedData()">
+                <i class="fas fa-share"></i> Share
+            </button>
+        </div>
+    </div>
+    
+    <div class="security-notice">
+        <i class="fas fa-exclamation-triangle"></i>
+        <p><strong>Important:</strong> Your encryption key is not shown here for security. Keep your key separate from this encrypted data.</p>
+    </div>
+</div>`;
+            resultDiv.innerHTML = formattedResult;
+            // Auto-scroll to results
+            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
         
         if (statusDiv) {
-            statusDiv.innerHTML = '✅ Encrypted!';
+            statusDiv.innerHTML = '✅ Text encrypted successfully!';
             statusDiv.className = 'status-bar status-success';
         }
         
+        console.log("Encryption successful!");
+        
     } catch (error) {
         console.error("Encryption error:", error);
+        
         currentEncryptedData = null;
         
         if (resultDiv) {
-            resultDiv.innerHTML = '<div class="error-message">❌ Encryption failed</div>';
+            resultDiv.innerHTML = '<div class="error-message"><i class="fas fa-exclamation-triangle"></i> Encryption failed: ' + error.message + '</div>';
         }
         if (statusDiv) {
-            statusDiv.innerHTML = '❌ Failed';
+            statusDiv.innerHTML = '❌ Encryption failed';
             statusDiv.className = 'status-bar status-error';
         }
     }
+}
+
+// Helper function to get key strength
+function getKeyStrength(key) {
+    if (!key) return "none";
+    if (key.length >= 32) return "excellent";
+    if (key.length >= 16) return "strong";
+    if (key.length >= 8) return "good";
+    return "weak";
+}
+
+// Copy export text to clipboard
+function copyExportText() {
+    const textarea = document.querySelector('.export-textarea');
+    if (textarea) {
+        copyToClipboard(textarea.value);
+    }
+}
+
+// Download encrypted data
+function downloadEncryptedData(encryptedData, iv) {
+    const data = {
+        encrypted: encryptedData,
+        iv: iv,
+        algorithm: "AES-256-GCM",
+        timestamp: new Date().toISOString()
+    };
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `encrypted-data-${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 }
 
 // Decrypt text
@@ -255,6 +461,7 @@ async function decryptText() {
     console.log("Starting decryption...");
     
     try {
+        // Get key
         const keyString = encryptionKey ? encryptionKey.value.trim() : "";
         
         if (!keyString) {
@@ -262,51 +469,56 @@ async function decryptText() {
             return;
         }
         
-        let encryptedDataToUse = currentEncryptedData;
+        // Check input for encrypted data
+        const inputTextValue = inputText ? inputText.value.trim() : "";
+        let encryptedDataToUse = null;
         
-        // Try to parse from input if no stored data
-        if (!encryptedDataToUse) {
-            const inputTextValue = inputText ? inputText.value.trim() : "";
-            if (inputTextValue) {
-                try {
-                    // Try to parse JSON
-                    const parsed = JSON.parse(inputTextValue);
-                    if (parsed.data && parsed.iv) {
-                        encryptedDataToUse = parsed;
-                    }
-                } catch (e) {
-                    // Not JSON, check if it's just the encrypted data format
+        if (inputTextValue) {
+            // Try to parse as JSON first
+            try {
+                const parsed = JSON.parse(inputTextValue);
+                if (parsed.data && parsed.iv) {
+                    encryptedDataToUse = parsed;
+                }
+            } catch (e) {
+                // Not JSON, check if it's just base64
+                if (inputTextValue.length > 50 && /^[A-Za-z0-9+/=]+$/.test(inputTextValue.split('\n')[0])) {
+                    // Might be our export format - try to extract
                     const lines = inputTextValue.split('\n');
-                    const encryptedLine = lines.find(line => line.includes('===') && lines.indexOf(line) < lines.length - 5);
-                    if (encryptedLine) {
-                        // Try to extract data from formatted text
-                        const dataMatch = inputTextValue.match(/=== ENCRYPTED CONTENT ===\s*([\s\S]+?)\s*===/);
-                        const ivMatch = inputTextValue.match(/=== INITIALIZATION VECTOR ===\s*([\s\S]+?)\s*===/);
-                        
-                        if (dataMatch && ivMatch) {
-                            encryptedDataToUse = {
-                                data: dataMatch[1].trim(),
-                                iv: ivMatch[1].trim(),
-                                algorithm: "AES-GCM-256"
-                            };
+                    let data = '', iv = '';
+                    
+                    for (let i = 0; i < lines.length; i++) {
+                        if (lines[i].includes('ENCRYPTED CONTENT:')) {
+                            for (let j = i + 1; j < lines.length && lines[j] && !lines[j].includes('IV'); j++) {
+                                data += lines[j].trim();
+                            }
                         }
+                        if (lines[i].includes('IV (Required for decryption):')) {
+                            iv = lines[i + 1] ? lines[i + 1].trim() : '';
+                        }
+                    }
+                    
+                    if (data && iv) {
+                        encryptedDataToUse = { data, iv };
                     }
                 }
             }
         }
         
-        if (!encryptedDataToUse || !encryptedDataToUse.data || !encryptedDataToUse.iv) {
-            alert(`To decrypt, please provide:
-            
-1. The ENCRYPTED DATA (from previous encryption), OR
-2. Paste the full output from encryption
-            
-Make sure you have both the encrypted content AND initialization vector.`);
+        // Use stored data if available and input is empty
+        if (!encryptedDataToUse && currentEncryptedData) {
+            encryptedDataToUse = currentEncryptedData;
+        }
+        
+        if (!encryptedDataToUse) {
+            alert("No encrypted data found. Please paste the encrypted data in the input field.\n\nFormat can be:\n1. Full JSON object\n2. The export format from this app\n3. Just the encrypted base64 string (if you have the IV)");
             return;
         }
         
         // Update UI
-        if (resultDiv) resultDiv.innerHTML = '<div class="loading">Decrypting...</div>';
+        if (resultDiv) {
+            resultDiv.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Decrypting...</div>';
+        }
         if (statusDiv) {
             statusDiv.innerHTML = '⏳ Decrypting...';
             statusDiv.className = 'status-bar status-info';
@@ -334,94 +546,96 @@ Make sure you have both the encrypted content AND initialization vector.`);
             ["encrypt", "decrypt"]
         );
         
-        // Convert and decrypt
+        // Convert from base64
         const iv = new Uint8Array(atob(encryptedDataToUse.iv).split('').map(c => c.charCodeAt(0)));
         const encryptedBytes = new Uint8Array(atob(encryptedDataToUse.data).split('').map(c => c.charCodeAt(0)));
         
+        // Decrypt
         const decryptedData = await crypto.subtle.decrypt(
-            { name: "AES-GCM", iv: iv },
+            {
+                name: "AES-GCM",
+                iv: iv
+            },
             key,
             encryptedBytes
         );
         
+        // Convert to text
         const decryptedText = new TextDecoder().decode(decryptedData);
         
-        // Create clean output
-        const outputText = `🔓 DECRYPTED MESSAGE 🔓
+        // SIMPLIFIED DECRYPTION OUTPUT
+        const decryptedExport = `🔓 DECRYPTED MESSAGE
+=====================
+Decrypted: ${new Date().toLocaleString()}
+Algorithm: AES-256-GCM
+Key Strength: ${getKeyStrength(keyString).toUpperCase()}
 
-✅ Successfully decrypted!
-📅 Time: ${new Date().toLocaleString()}
-🔑 Key used: ${keyString.substring(0, 20)}${keyString.length > 20 ? '...' : ''}
-
-=== YOUR MESSAGE ===
+ORIGINAL MESSAGE:
+=====================
 ${decryptedText}
 
-=== FULL MESSAGE ===
-${decryptedText}
-
-✅ Copy the message above.`;
+=====================
+✅ Decryption successful using ${keyString.length}-character key`;
         
-        // Display result
         if (resultDiv) {
-            resultDiv.innerHTML = `
-                <div class="simple-result">
-                    <div class="result-title">🔓 Decryption Complete</div>
-                    <textarea class="copy-box" readonly>${outputText}</textarea>
-                    <div class="hint">Your decrypted message is ready</div>
-                </div>
-            `;
+            const formattedResult = `
+<div class="result-container">
+    <div class="result-header success">
+        <i class="fas fa-unlock"></i>
+        <h3>DECRYPTION SUCCESSFUL</h3>
+    </div>
+    
+    <div class="decrypted-content">
+        <h4><i class="fas fa-file-alt"></i> Decrypted Text:</h4>
+        <div class="message-display">${decryptedText}</div>
+    </div>
+    
+    <div class="export-section">
+        <h4><i class="fas fa-copy"></i> COPY FORMAT:</h4>
+        <textarea class="export-textarea" readonly rows="6">${decryptedExport}</textarea>
+        
+        <div class="export-actions">
+            <button class="btn-primary" onclick="copyExportText()">
+                <i class="fas fa-copy"></i> Copy All
+            </button>
+            <button class="btn-secondary" onclick="copyToClipboard('${decryptedText.replace(/'/g, "\\'")}')">
+                <i class="fas fa-copy"></i> Copy Text Only
+            </button>
+        </div>
+    </div>
+</div>`;
+            resultDiv.innerHTML = formattedResult;
+            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
         
         if (statusDiv) {
-            statusDiv.innerHTML = '✅ Decrypted!';
+            statusDiv.innerHTML = '✅ Text decrypted successfully!';
             statusDiv.className = 'status-bar status-success';
         }
         
         currentEncryptedData = null;
         
+        console.log("Decryption successful!");
+        
     } catch (error) {
         console.error("Decryption error:", error);
+        
         currentEncryptedData = null;
         
         if (resultDiv) {
-            resultDiv.innerHTML = `
-                <div class="error-message">
-                    ❌ Decryption failed
-                    <div class="error-hint">Check your key and ensure you have the complete encrypted data.</div>
-                </div>
-            `;
+            resultDiv.innerHTML = '<div class="error-message"><i class="fas fa-exclamation-triangle"></i> Decryption failed. Please check:<br>1. Your encryption key<br>2. The encrypted data format<br>3. That the IV is included</div>';
         }
         if (statusDiv) {
-            statusDiv.innerHTML = '❌ Wrong key/data';
+            statusDiv.innerHTML = '❌ Wrong key or invalid data';
             statusDiv.className = 'status-bar status-error';
         }
     }
 }
 
-// Copy result to clipboard
-function copyResult() {
-    if (!resultDiv) return;
-    
-    const textarea = resultDiv.querySelector('textarea');
-    if (textarea) {
-        const text = textarea.value;
-        navigator.clipboard.writeText(text).then(() => {
-            if (statusDiv) {
-                statusDiv.innerHTML = '✅ Copied!';
-                statusDiv.className = 'status-bar status-success';
-                setTimeout(() => {
-                    statusDiv.innerHTML = '✅ Ready';
-                    statusDiv.className = 'status-bar status-info';
-                }, 2000);
-            }
-        }).catch(err => {
-            alert("Select the text and copy manually (Ctrl+C)");
-        });
-    }
-}
-
 // Clear all fields
 function clearAll() {
+    console.log("Clearing all...");
+    
     if (inputText) inputText.value = "";
     if (encryptionKey) {
         encryptionKey.value = "";
@@ -429,20 +643,10 @@ function clearAll() {
         isKeyVisible = false;
     }
     if (resultDiv) {
-        resultDiv.innerHTML = `
-            <div class="simple-result">
-                <div class="result-title">📝 Encryption App</div>
-                <div class="placeholder">
-                    1. Generate or enter an encryption key<br>
-                    2. Type your message<br>
-                    3. Click Encrypt or Decrypt<br><br>
-                    Results will appear here.
-                </div>
-            </div>
-        `;
+        resultDiv.innerHTML = '<div class="placeholder"><i class="fas fa-info-circle"></i><br>Results will appear here<br><small>Encrypt or decrypt text to see results</small></div>';
     }
     if (statusDiv) {
-        statusDiv.innerHTML = '✅ Ready';
+        statusDiv.innerHTML = '✅ Cleared! Ready for new operation.';
         statusDiv.className = 'status-bar status-info';
     }
     if (keyStrength) {
@@ -455,15 +659,24 @@ function clearAll() {
         toggleBtn.innerHTML = '<i class="fas fa-eye"></i>';
     }
     
+    // Remove any popups
+    const popups = document.querySelectorAll('.key-popup-overlay');
+    popups.forEach(popup => popup.remove());
+    
     currentEncryptedData = null;
 }
 
-// Export functions
+// Export functions to global scope
 window.generateKey = generateKey;
 window.encryptText = encryptText;
 window.decryptText = decryptText;
 window.clearAll = clearAll;
 window.copyResult = copyResult;
 window.toggleKeyVisibility = toggleKeyVisibility;
+window.copyToClipboard = copyToClipboard;
+window.downloadKey = downloadKey;
+window.printKey = printKey;
+window.copyExportText = copyExportText;
+window.downloadEncryptedData = downloadEncryptedData;
 
 console.log("=== ENCRYPTION APP LOADED ===");
