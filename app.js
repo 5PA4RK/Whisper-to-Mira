@@ -25,19 +25,17 @@ document.addEventListener('DOMContentLoaded', function() {
         encryptionKey.value = "";
         encryptionKey.type = 'password';
     }
-    if (statusDiv) statusDiv.textContent = "✅ App ready!";
+    if (statusDiv) statusDiv.textContent = "✅ Ready";
     
     // Update key strength on input
     if (encryptionKey) {
         encryptionKey.addEventListener('input', updateKeyStrengthDisplay);
     }
     
-    // Clear encrypted data when input changes (FIXES THE BUG)
+    // Clear encrypted data when input changes
     if (inputText) {
         inputText.addEventListener('input', function() {
-            if (this.value.trim() === "" || !this.value.startsWith("{")) {
-                currentEncryptedData = null; // Clear old data
-            }
+            currentEncryptedData = null;
         });
     }
     
@@ -64,27 +62,31 @@ function generateKey() {
             .replace(/\//g, '_')
             .replace(/=+$/, '');
         
-        // Set the key and clear old results
+        // Set the key
         encryptionKey.value = key;
-        currentEncryptedData = null; // Clear previous encrypted data
+        currentEncryptedData = null;
         
-        // Update displays
         updateKeyStrengthDisplay();
         
         if (statusDiv) {
-            statusDiv.innerHTML = '✅ Secure key generated!';
+            statusDiv.innerHTML = '✅ Key generated';
             statusDiv.className = 'status-bar status-success';
         }
         
-        // Clear result area
         if (resultDiv) {
-            resultDiv.innerHTML = "<div class='placeholder'>New key generated. Enter text and click 'Encrypt'.</div>";
+            resultDiv.innerHTML = `
+                <div class="simple-result">
+                    <div class="result-title">🔑 New Encryption Key Generated</div>
+                    <textarea class="copy-box" readonly>${key}</textarea>
+                    <div class="hint">Copy this key and keep it safe!</div>
+                </div>
+            `;
         }
         
     } catch (error) {
         console.error("Key generation error:", error);
         if (statusDiv) {
-            statusDiv.innerHTML = '❌ Error generating key';
+            statusDiv.innerHTML = '❌ Error';
             statusDiv.className = 'status-bar status-error';
         }
     }
@@ -136,11 +138,9 @@ async function encryptText() {
     console.log("Starting encryption...");
     
     try {
-        // Get values
         const text = inputText ? inputText.value.trim() : "";
         const keyString = encryptionKey ? encryptionKey.value.trim() : "";
         
-        // Validate
         if (!text) {
             alert("Please enter text to encrypt");
             return;
@@ -151,9 +151,7 @@ async function encryptText() {
         }
         
         // Update UI
-        if (resultDiv) {
-            resultDiv.innerHTML = '<div class="loading">Encrypting...</div>';
-        }
+        if (resultDiv) resultDiv.innerHTML = '<div class="loading">Encrypting...</div>';
         if (statusDiv) {
             statusDiv.innerHTML = '⏳ Encrypting...';
             statusDiv.className = 'status-bar status-info';
@@ -182,15 +180,10 @@ async function encryptText() {
             ["encrypt", "decrypt"]
         );
         
-        // Generate IV
+        // Generate IV and encrypt
         const iv = crypto.getRandomValues(new Uint8Array(12));
-        
-        // Encrypt
         const encryptedData = await crypto.subtle.encrypt(
-            {
-                name: "AES-GCM",
-                iv: iv
-            },
+            { name: "AES-GCM", iv: iv },
             key,
             new TextEncoder().encode(text)
         );
@@ -200,7 +193,7 @@ async function encryptText() {
         const encryptedBase64 = btoa(String.fromCharCode.apply(null, encryptedBytes));
         const ivBase64 = btoa(String.fromCharCode.apply(null, iv));
         
-        // Store new encrypted data
+        // Store data
         currentEncryptedData = {
             iv: ivBase64,
             data: encryptedBase64,
@@ -208,56 +201,50 @@ async function encryptText() {
             timestamp: new Date().toISOString()
         };
         
-        // SIMPLIFIED OUTPUT - Just show the essential data
+        // Create clean, copy-friendly output
+        const outputText = `🔐 ENCRYPTED DATA 🔐
+
+📝 Original: ${text.substring(0, 50)}${text.length > 50 ? '...' : ''}
+🔑 Key: ${keyString}
+📅 Time: ${new Date().toLocaleString()}
+
+=== ENCRYPTED CONTENT ===
+${encryptedBase64}
+
+=== INITIALIZATION VECTOR ===
+${ivBase64}
+
+=== FULL DATA (JSON) ===
+${JSON.stringify(currentEncryptedData, null, 2)}
+
+⚠️ Keep your key and IV secure!
+Use this data with the same key to decrypt.`;
+        
+        // Display result
         if (resultDiv) {
-            const formattedResult = `
-<div class="encrypted-result">
-    <div class="result-header">
-        <i class="fas fa-shield-alt"></i> Encryption Successful
-    </div>
-    <div class="simple-output">
-        <div class="output-section">
-            <label>Your Data:</label>
-            <div class="data-box">${text.substring(0, 100)}${text.length > 100 ? '...' : ''}</div>
-        </div>
-        
-        <div class="output-section">
-            <label>Encrypted Result:</label>
-            <textarea readonly class="result-textarea">${currentEncryptedData.data}</textarea>
-        </div>
-        
-        <div class="output-section">
-            <label>Decryption Key (save this!):</label>
-            <div class="key-box">${keyString}</div>
-        </div>
-        
-        <div class="output-section">
-            <label>Full Data (JSON):</label>
-            <textarea readonly class="result-textarea">${JSON.stringify(currentEncryptedData, null, 2)}</textarea>
-        </div>
-    </div>
-</div>`;
-            resultDiv.innerHTML = formattedResult;
+            resultDiv.innerHTML = `
+                <div class="simple-result">
+                    <div class="result-title">🔒 Encryption Complete</div>
+                    <textarea class="copy-box" readonly>${outputText}</textarea>
+                    <div class="hint">Copy everything above for safekeeping</div>
+                </div>
+            `;
         }
         
         if (statusDiv) {
-            statusDiv.innerHTML = '✅ Text encrypted!';
+            statusDiv.innerHTML = '✅ Encrypted!';
             statusDiv.className = 'status-bar status-success';
         }
         
-        console.log("Encryption successful!");
-        
     } catch (error) {
         console.error("Encryption error:", error);
-        
-        // Clear any old data on error
         currentEncryptedData = null;
         
         if (resultDiv) {
-            resultDiv.innerHTML = '<div class="error-message">❌ Encryption failed: ' + error.message + '</div>';
+            resultDiv.innerHTML = '<div class="error-message">❌ Encryption failed</div>';
         }
         if (statusDiv) {
-            statusDiv.innerHTML = '❌ Encryption failed';
+            statusDiv.innerHTML = '❌ Failed';
             statusDiv.className = 'status-bar status-error';
         }
     }
@@ -268,7 +255,6 @@ async function decryptText() {
     console.log("Starting decryption...");
     
     try {
-        // Get key
         const keyString = encryptionKey ? encryptionKey.value.trim() : "";
         
         if (!keyString) {
@@ -278,63 +264,49 @@ async function decryptText() {
         
         let encryptedDataToUse = currentEncryptedData;
         
-        // Check if we should use input text instead of stored data
-        if (!encryptedDataToUse || inputText.value.trim() !== "") {
+        // Try to parse from input if no stored data
+        if (!encryptedDataToUse) {
             const inputTextValue = inputText ? inputText.value.trim() : "";
             if (inputTextValue) {
                 try {
-                    // Try to parse JSON from input
-                    const parsedData = JSON.parse(inputTextValue);
-                    if (parsedData.data && parsedData.iv) {
-                        encryptedDataToUse = parsedData;
-                    } else {
-                        // If it's not JSON but might be just the encrypted data
-                        if (inputTextValue.includes('"data":') && inputTextValue.includes('"iv":')) {
-                            // Try to find JSON-like structure
-                            const jsonMatch = inputTextValue.match(/\{[\s\S]*\}/);
-                            if (jsonMatch) {
-                                encryptedDataToUse = JSON.parse(jsonMatch[0]);
-                            }
+                    // Try to parse JSON
+                    const parsed = JSON.parse(inputTextValue);
+                    if (parsed.data && parsed.iv) {
+                        encryptedDataToUse = parsed;
+                    }
+                } catch (e) {
+                    // Not JSON, check if it's just the encrypted data format
+                    const lines = inputTextValue.split('\n');
+                    const encryptedLine = lines.find(line => line.includes('===') && lines.indexOf(line) < lines.length - 5);
+                    if (encryptedLine) {
+                        // Try to extract data from formatted text
+                        const dataMatch = inputTextValue.match(/=== ENCRYPTED CONTENT ===\s*([\s\S]+?)\s*===/);
+                        const ivMatch = inputTextValue.match(/=== INITIALIZATION VECTOR ===\s*([\s\S]+?)\s*===/);
+                        
+                        if (dataMatch && ivMatch) {
+                            encryptedDataToUse = {
+                                data: dataMatch[1].trim(),
+                                iv: ivMatch[1].trim(),
+                                algorithm: "AES-GCM-256"
+                            };
                         }
                     }
-                } catch (e) {
-                    // Not valid JSON - user might have entered something else
-                    console.log("Input is not valid JSON, trying alternative...");
                 }
             }
         }
         
-        // If still no data, check if input is just base64 data
-        if (!encryptedDataToUse) {
-            const inputTextValue = inputText ? inputText.value.trim() : "";
-            if (inputTextValue && inputTextValue.length > 20) {
-                // Assume it's just the encrypted data (without JSON wrapper)
-                try {
-                    // Check if it looks like base64
-                    if (/^[A-Za-z0-9+/=]+$/.test(inputTextValue)) {
-                        encryptedDataToUse = {
-                            data: inputTextValue,
-                            iv: "", // Will need IV
-                            algorithm: "AES-GCM"
-                        };
-                        alert("Please enter the IV (Initialization Vector) in a separate input or use the full JSON format.");
-                        return;
-                    }
-                } catch (e) {
-                    // Not base64 either
-                }
-            }
-        }
-        
-        if (!encryptedDataToUse) {
-            alert("No encrypted data found. Please:\n1. Encrypt something first, OR\n2. Paste the full JSON encrypted data in the input field");
+        if (!encryptedDataToUse || !encryptedDataToUse.data || !encryptedDataToUse.iv) {
+            alert(`To decrypt, please provide:
+            
+1. The ENCRYPTED DATA (from previous encryption), OR
+2. Paste the full output from encryption
+            
+Make sure you have both the encrypted content AND initialization vector.`);
             return;
         }
         
         // Update UI
-        if (resultDiv) {
-            resultDiv.innerHTML = '<div class="loading">Decrypting...</div>';
-        }
+        if (resultDiv) resultDiv.innerHTML = '<div class="loading">Decrypting...</div>';
         if (statusDiv) {
             statusDiv.innerHTML = '⏳ Decrypting...';
             statusDiv.className = 'status-bar status-info';
@@ -362,71 +334,65 @@ async function decryptText() {
             ["encrypt", "decrypt"]
         );
         
-        // Convert from base64
+        // Convert and decrypt
         const iv = new Uint8Array(atob(encryptedDataToUse.iv).split('').map(c => c.charCodeAt(0)));
         const encryptedBytes = new Uint8Array(atob(encryptedDataToUse.data).split('').map(c => c.charCodeAt(0)));
         
-        // Decrypt
         const decryptedData = await crypto.subtle.decrypt(
-            {
-                name: "AES-GCM",
-                iv: iv
-            },
+            { name: "AES-GCM", iv: iv },
             key,
             encryptedBytes
         );
         
-        // Convert to text
         const decryptedText = new TextDecoder().decode(decryptedData);
         
-        // SIMPLIFIED OUTPUT
+        // Create clean output
+        const outputText = `🔓 DECRYPTED MESSAGE 🔓
+
+✅ Successfully decrypted!
+📅 Time: ${new Date().toLocaleString()}
+🔑 Key used: ${keyString.substring(0, 20)}${keyString.length > 20 ? '...' : ''}
+
+=== YOUR MESSAGE ===
+${decryptedText}
+
+=== FULL MESSAGE ===
+${decryptedText}
+
+✅ Copy the message above.`;
+        
+        // Display result
         if (resultDiv) {
-            const formattedResult = `
-<div class="decrypted-result">
-    <div class="result-header">
-        <i class="fas fa-unlock"></i> Decryption Successful
-    </div>
-    <div class="simple-output">
-        <div class="output-section">
-            <label>Decrypted Message:</label>
-            <div class="data-box success-box">${decryptedText}</div>
-        </div>
-        
-        <div class="output-section">
-            <label>Copy Result:</label>
-            <textarea readonly class="result-textarea">${decryptedText}</textarea>
-        </div>
-        
-        <div class="info-box">
-            <i class="fas fa-info-circle"></i>
-            <span>Used key: ${keyString.substring(0, 20)}${keyString.length > 20 ? '...' : ''}</span>
-        </div>
-    </div>
-</div>`;
-            resultDiv.innerHTML = formattedResult;
+            resultDiv.innerHTML = `
+                <div class="simple-result">
+                    <div class="result-title">🔓 Decryption Complete</div>
+                    <textarea class="copy-box" readonly>${outputText}</textarea>
+                    <div class="hint">Your decrypted message is ready</div>
+                </div>
+            `;
         }
         
         if (statusDiv) {
-            statusDiv.innerHTML = '✅ Text decrypted!';
+            statusDiv.innerHTML = '✅ Decrypted!';
             statusDiv.className = 'status-bar status-success';
         }
         
-        // Clear the current encrypted data to allow new operations
         currentEncryptedData = null;
-        
-        console.log("Decryption successful!");
         
     } catch (error) {
         console.error("Decryption error:", error);
-        
-        // Clear data on error
         currentEncryptedData = null;
         
         if (resultDiv) {
-            resultDiv.innerHTML = '<div class="error-message">❌ Decryption failed. Check your key and data format.</div>';
+            resultDiv.innerHTML = `
+                <div class="error-message">
+                    ❌ Decryption failed
+                    <div class="error-hint">Check your key and ensure you have the complete encrypted data.</div>
+                </div>
+            `;
         }
         if (statusDiv) {
-            statusDiv.innerHTML = '❌ Wrong key or invalid data';
+            statusDiv.innerHTML = '❌ Wrong key/data';
             statusDiv.className = 'status-bar status-error';
         }
     }
@@ -436,40 +402,26 @@ async function decryptText() {
 function copyResult() {
     if (!resultDiv) return;
     
-    let textToCopy = "";
     const textarea = resultDiv.querySelector('textarea');
     if (textarea) {
-        textToCopy = textarea.value;
-    } else {
-        const dataBox = resultDiv.querySelector('.data-box');
-        if (dataBox) {
-            textToCopy = dataBox.textContent || dataBox.innerText;
-        }
+        const text = textarea.value;
+        navigator.clipboard.writeText(text).then(() => {
+            if (statusDiv) {
+                statusDiv.innerHTML = '✅ Copied!';
+                statusDiv.className = 'status-bar status-success';
+                setTimeout(() => {
+                    statusDiv.innerHTML = '✅ Ready';
+                    statusDiv.className = 'status-bar status-info';
+                }, 2000);
+            }
+        }).catch(err => {
+            alert("Select the text and copy manually (Ctrl+C)");
+        });
     }
-    
-    if (!textToCopy) {
-        textToCopy = resultDiv.textContent || resultDiv.innerText;
-    }
-    
-    navigator.clipboard.writeText(textToCopy).then(() => {
-        if (statusDiv) {
-            statusDiv.innerHTML = '✅ Copied to clipboard!';
-            statusDiv.className = 'status-bar status-success';
-            setTimeout(() => {
-                statusDiv.innerHTML = '✅ Ready';
-                statusDiv.className = 'status-bar status-info';
-            }, 2000);
-        }
-    }).catch(err => {
-        console.error('Copy failed:', err);
-        alert("Could not copy to clipboard. Please select and copy manually.");
-    });
 }
 
 // Clear all fields
 function clearAll() {
-    console.log("Clearing all...");
-    
     if (inputText) inputText.value = "";
     if (encryptionKey) {
         encryptionKey.value = "";
@@ -477,10 +429,20 @@ function clearAll() {
         isKeyVisible = false;
     }
     if (resultDiv) {
-        resultDiv.innerHTML = "<div class='placeholder'>Results will appear here...</div>";
+        resultDiv.innerHTML = `
+            <div class="simple-result">
+                <div class="result-title">📝 Encryption App</div>
+                <div class="placeholder">
+                    1. Generate or enter an encryption key<br>
+                    2. Type your message<br>
+                    3. Click Encrypt or Decrypt<br><br>
+                    Results will appear here.
+                </div>
+            </div>
+        `;
     }
     if (statusDiv) {
-        statusDiv.innerHTML = '✅ Cleared! Ready for new operation.';
+        statusDiv.innerHTML = '✅ Ready';
         statusDiv.className = 'status-bar status-info';
     }
     if (keyStrength) {
@@ -493,11 +455,10 @@ function clearAll() {
         toggleBtn.innerHTML = '<i class="fas fa-eye"></i>';
     }
     
-    // IMPORTANT: Clear the stored data
     currentEncryptedData = null;
 }
 
-// Export functions to global scope
+// Export functions
 window.generateKey = generateKey;
 window.encryptText = encryptText;
 window.decryptText = decryptText;
