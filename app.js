@@ -4,10 +4,10 @@ console.log("=== ENCRYPTION APP STARTING ===");
 // Global variables
 let currentEncryptedData = null;
 let isKeyVisible = false; // Track key visibility
-let missingIV = null; // Track if IV is missing
+const IV_SEPARATOR = '::IV::'; // Unique separator for IV and encrypted data
 
 // DOM Elements
-let inputText, encryptionKey, resultDiv, statusDiv, toggleKeyBtn, keyStrength, ivInputDiv, ivInputField;
+let inputText, encryptionKey, resultDiv, statusDiv, toggleKeyBtn, keyStrength;
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', function() {
@@ -20,9 +20,6 @@ document.addEventListener('DOMContentLoaded', function() {
     statusDiv = document.getElementById('status');
     keyStrength = document.getElementById('keyStrength');
     
-    // Create IV input elements if they don't exist
-    createIVInput();
-    
     console.log("Elements found:", {
         inputText: !!inputText,
         encryptionKey: !!encryptionKey,
@@ -34,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set initial values
     if (inputText) {
         inputText.value = "";
-        inputText.placeholder = "For encryption: Enter text to encrypt\nFor decryption: Paste encrypted data (JSON format) OR just the base64 encrypted data";
+        inputText.placeholder = "For encryption: Enter text to encrypt\nFor decryption: Paste encrypted data (any format)";
     }
     if (encryptionKey) {
         encryptionKey.value = "";
@@ -49,102 +46,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log("App initialized successfully!");
 });
-
-// Create IV input field dynamically
-function createIVInput() {
-    // Check if IV input already exists
-    if (document.getElementById('ivInputContainer')) return;
-    
-    // Find the form group for encryption key
-    const keyFormGroup = document.querySelector('.form-group:nth-child(2)');
-    if (!keyFormGroup) return;
-    
-    // Create IV input container
-    const ivContainer = document.createElement('div');
-    ivContainer.id = 'ivInputContainer';
-    ivContainer.className = 'form-group';
-    ivContainer.style.display = 'none'; // Hidden by default
-    
-    ivContainer.innerHTML = `
-        <label for="ivInput" class="form-label">
-            <i class="fas fa-fingerprint"></i> IV (Initialization Vector) - Required for Decryption
-        </label>
-        <div class="key-input-container">
-            <input 
-                type="text" 
-                id="ivInput" 
-                placeholder="Paste the IV (base64) from your encrypted data here..."
-                class="form-input"
-            >
-        </div>
-        <div class="key-info">
-            <small class="key-hint">Required when decrypting with only encrypted data (no JSON)</small>
-            <span id="ivStatus" class="key-strength key-good">Required</span>
-        </div>
-        <div class="iv-buttons">
-            <button type="button" class="btn btn-small btn-outline" onclick="useLastIV()">
-                <i class="fas fa-history"></i> Use Last IV
-            </button>
-            <button type="button" class="btn btn-small btn-outline" onclick="hideIVInput()">
-                <i class="fas fa-times"></i> Cancel
-            </button>
-        </div>
-    `;
-    
-    // Insert after the encryption key field
-    keyFormGroup.parentNode.insertBefore(ivContainer, keyFormGroup.nextSibling);
-    
-    // Store references
-    ivInputDiv = document.getElementById('ivInputContainer');
-    ivInputField = document.getElementById('ivInput');
-    
-    console.log("IV input field created");
-}
-
-// Show IV input field
-function showIVInput() {
-    if (ivInputDiv) {
-        ivInputDiv.style.display = 'block';
-        if (ivInputField) {
-            ivInputField.focus();
-        }
-        
-        // Scroll to IV field
-        ivInputDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        
-        if (statusDiv) {
-            statusDiv.innerHTML = '<i class="fas fa-info-circle"></i> <span>⚠️ IV required! Please paste the IV from your encrypted data.</span>';
-            statusDiv.className = 'status-bar status-warning';
-        }
-    }
-}
-
-// Hide IV input field
-function hideIVInput() {
-    if (ivInputDiv) {
-        ivInputDiv.style.display = 'none';
-        missingIV = false;
-        
-        if (statusDiv) {
-            statusDiv.innerHTML = '<i class="fas fa-info-circle"></i> <span>✅ Ready. Enter full JSON or paste encrypted data with IV.</span>';
-            statusDiv.className = 'status-bar status-info';
-        }
-    }
-}
-
-// Use the IV from the last encryption
-function useLastIV() {
-    if (currentEncryptedData && currentEncryptedData.iv && ivInputField) {
-        ivInputField.value = currentEncryptedData.iv;
-        
-        if (statusDiv) {
-            statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> <span>✅ Last IV loaded. You can now decrypt.</span>';
-            statusDiv.className = 'status-bar status-success';
-        }
-    } else {
-        alert("No previous IV found. Please paste the IV manually.");
-    }
-}
 
 // Generate a secure random key
 function generateKey() {
@@ -233,96 +134,92 @@ function toggleKeyVisibility() {
     }
 }
 
-// Helper function to parse encrypted data from various formats
+// NEW: Combine IV and encrypted data into a single string
+function combineIVandData(ivBase64, dataBase64) {
+    return ivBase64 + IV_SEPARATOR + dataBase64;
+}
+
+// NEW: Split combined string back into IV and data
+function splitIVandData(combinedString) {
+    const parts = combinedString.split(IV_SEPARATOR);
+    if (parts.length === 2) {
+        return {
+            iv: parts[0],
+            data: parts[1]
+        };
+    }
+    return null;
+}
+
+// NEW: Parse encrypted data from various formats
 function parseEncryptedData(input) {
     console.log("Parsing encrypted data...");
     
     const trimmedInput = input.trim();
     
-    // Try to parse as JSON first
+    // 1. Check if it's our combined format (IV::IV::ENCRYPTED_DATA)
+    const splitData = splitIVandData(trimmedInput);
+    if (splitData) {
+        console.log("Detected combined IV+Data format");
+        return {
+            data: splitData.data,
+            iv: splitData.iv,
+            algorithm: "AES-GCM-256",
+            timestamp: new Date().toISOString(),
+            format: "combined"
+        };
+    }
+    
+    // 2. Try to parse as JSON
     if (trimmedInput.startsWith('{') || trimmedInput.startsWith('[')) {
         try {
             const parsed = JSON.parse(trimmedInput);
             console.log("Detected JSON format");
-            return parsed;
+            if (parsed.data && parsed.iv) {
+                return parsed;
+            }
         } catch (e) {
             console.log("Not valid JSON, trying other formats");
         }
     }
     
-    // Check if it looks like a structured export format (with IV and data sections)
+    // 3. Check for structured export format
     const lines = trimmedInput.split('\n');
     let encryptedData = null;
     let iv = null;
     let algorithm = "AES-GCM-256";
-    let timestamp = new Date().toISOString();
     
-    // Parse the structured export format
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
         
         if (line.startsWith('ENCRYPTED DATA:')) {
-            // Next line(s) should contain the encrypted data
             encryptedData = lines[i + 1] ? lines[i + 1].trim() : null;
         }
         
         if (line.startsWith('INITIALIZATION VECTOR (IV):')) {
-            // Next line(s) should contain the IV
             iv = lines[i + 1] ? lines[i + 1].trim() : null;
         }
         
         if (line.startsWith('Algorithm:')) {
             algorithm = line.split(':')[1].trim();
         }
-        
-        if (line.startsWith('Timestamp:')) {
-            const timestampStr = line.split(':').slice(1).join(':').trim();
-            try {
-                timestamp = new Date(timestampStr).toISOString();
-            } catch (e) {
-                // Keep default timestamp
-            }
-        }
     }
     
-    // If we found both encrypted data and IV in the structured format
     if (encryptedData && iv) {
         console.log("Detected structured export format");
         return {
             data: encryptedData,
             iv: iv,
             algorithm: algorithm,
-            timestamp: timestamp
+            timestamp: new Date().toISOString(),
+            format: "structured"
         };
     }
     
-    // Check if it's just a single base64 string (might be encrypted data only)
-    // In this case, we'll need to ask for IV separately or use a default
+    // 4. If it's just base64, assume it might be combined format without separator
     if (trimmedInput.length > 20 && /^[A-Za-z0-9+/=]+$/.test(trimmedInput)) {
-        console.log("Detected base64 data, assuming it's encrypted data only");
-        missingIV = true;
-        return {
-            data: trimmedInput,
-            iv: null, // IV will need to be provided separately
-            algorithm: "AES-GCM-256",
-            timestamp: timestamp
-        };
-    }
-    
-    // Check if it's the full export text (without section headers)
-    if (trimmedInput.includes('🔐 SECURE ENCRYPTION EXPORT 🔐')) {
-        // Extract data between markers
-        const dataMatch = trimmedInput.match(/ENCRYPTED DATA:\s*\n=+\s*\n([A-Za-z0-9+/=\s]+)/);
-        const ivMatch = trimmedInput.match(/INITIALIZATION VECTOR \(IV\):\s*\n=+\s*\n([A-Za-z0-9+/=\s]+)/);
-        
-        if (dataMatch && dataMatch[1] && ivMatch && ivMatch[1]) {
-            return {
-                data: dataMatch[1].trim(),
-                iv: ivMatch[1].trim(),
-                algorithm: "AES-GCM-256",
-                timestamp: new Date().toISOString()
-            };
-        }
+        console.log("Detected base64 only, but no IV found");
+        return null;
     }
     
     return null;
@@ -345,11 +242,6 @@ async function encryptText() {
         if (!keyString) {
             alert("Please enter an encryption key");
             return;
-        }
-        
-        // Hide IV input if visible
-        if (ivInputDiv && ivInputDiv.style.display === 'block') {
-            hideIVInput();
         }
         
         // Update UI
@@ -402,15 +294,19 @@ async function encryptText() {
         const encryptedBase64 = btoa(String.fromCharCode.apply(null, encryptedBytes));
         const ivBase64 = btoa(String.fromCharCode.apply(null, iv));
         
+        // Create combined string (IV + encrypted data)
+        const combinedString = combineIVandData(ivBase64, encryptedBase64);
+        
         // Store for later use
         currentEncryptedData = {
             iv: ivBase64,
             data: encryptedBase64,
+            combined: combinedString, // NEW: Store combined format
             algorithm: "AES-GCM-256",
             timestamp: new Date().toISOString()
         };
         
-        // Create nicely formatted export text
+        // Create nicely formatted export text with multiple formats
         const exportText = `🔐 SECURE ENCRYPTION EXPORT 🔐
         
 ENCRYPTION DETAILS:
@@ -419,7 +315,11 @@ Algorithm: ${currentEncryptedData.algorithm}
 Timestamp: ${new Date(currentEncryptedData.timestamp).toLocaleString()}
 Key Strength: ${getKeyStrength(keyString)}
 
-ENCRYPTED DATA:
+📱 MOBILE-FRIENDLY FORMAT (Copy this for easy decryption):
+=====================
+${combinedString}
+
+ENCRYPTED DATA ONLY:
 =====================
 ${currentEncryptedData.data}
 
@@ -427,15 +327,15 @@ INITIALIZATION VECTOR (IV):
 =====================
 ${currentEncryptedData.iv}
 
-FULL JSON DATA (for import):
+FULL JSON DATA:
 =====================
 ${JSON.stringify(currentEncryptedData, null, 2)}
 
 🔐 END OF ENCRYPTED DATA 🔐
 
 ⚠️ IMPORTANT NOTES:
-- Keep this data secure
-- The IV is needed for decryption
+- For easy decryption, use the "MOBILE-FRIENDLY FORMAT"
+- The IV is included with the encrypted data
 - Store the encryption key separately
 - This export does NOT contain the encryption key`;
 
@@ -460,19 +360,22 @@ ${JSON.stringify(currentEncryptedData, null, 2)}
             <span class="result-value key-${getKeyStrength(keyString).toLowerCase()}">${getKeyStrength(keyString)}</span>
         </div>
         <div class="result-item">
-            <span class="result-label">Encrypted Data:</span>
-            <div class="encrypted-data">${currentEncryptedData.data.substring(0, 100)}${currentEncryptedData.data.length > 100 ? '...' : ''}</div>
-        </div>
-        <div class="result-item">
-            <span class="result-label">IV (Initialization Vector):</span>
-            <div class="encrypted-data">${currentEncryptedData.iv}</div>
+            <span class="result-label">IV:</span>
+            <div class="encrypted-data small">${currentEncryptedData.iv.substring(0, 50)}...</div>
         </div>
         <div class="result-item full-width">
-            <span class="result-label">Export Format:</span>
-            <textarea readonly class="full-data export-textarea">${exportText}</textarea>
-            <div class="export-format-label">
-                <i class="fas fa-info-circle"></i> This format is optimized for copying and sharing
+            <span class="result-label">
+                <i class="fas fa-mobile-alt"></i> Mobile-Friendly Format:
+                <small style="color: var(--success-color); margin-left: 8px;">(Copy this for easy decryption)</small>
+            </span>
+            <textarea readonly class="full-data mobile-friendly">${combinedString}</textarea>
+            <div class="export-format-label success">
+                <i class="fas fa-check-circle"></i> This single string contains everything needed for decryption
             </div>
+        </div>
+        <div class="result-item full-width">
+            <span class="result-label">Full Export Format:</span>
+            <textarea readonly class="full-data export-textarea">${exportText}</textarea>
         </div>
         <div class="result-item full-width">
             <span class="result-label">Full JSON Data:</span>
@@ -484,7 +387,7 @@ ${JSON.stringify(currentEncryptedData, null, 2)}
         }
         
         if (statusDiv) {
-            statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> <span>✅ Text encrypted successfully!</span>';
+            statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> <span>✅ Text encrypted successfully! Copy the "Mobile-Friendly Format" for easy decryption.</span>';
             statusDiv.className = 'status-bar status-success';
         }
         
@@ -533,12 +436,6 @@ async function decryptText() {
             return;
         }
         
-        // Check if IV is manually provided
-        let manualIV = null;
-        if (ivInputField && ivInputField.value.trim()) {
-            manualIV = ivInputField.value.trim();
-        }
-        
         // Update UI
         if (resultDiv) {
             resultDiv.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Decrypting...</div>';
@@ -551,37 +448,22 @@ async function decryptText() {
         // Parse the encrypted data
         let encryptedDataObj = null;
         
-        // Check if we have currentEncryptedData from a previous encryption
-        if (currentEncryptedData) {
-            console.log("Using currently stored encrypted data");
-            encryptedDataObj = currentEncryptedData;
-        } else {
-            // Try to parse the input
-            encryptedDataObj = parseEncryptedData(inputTextValue);
-            
-            // If parsing failed, show IV input
-            if (!encryptedDataObj) {
-                showIVInput();
-                throw new Error("Please provide the IV using the field above.");
-            }
+        // First, try to parse the input
+        encryptedDataObj = parseEncryptedData(inputTextValue);
+        
+        // If parsing failed, provide helpful error
+        if (!encryptedDataObj) {
+            throw new Error(
+                "Could not parse encrypted data. Please use one of these formats:\n\n" +
+                "1. Mobile-friendly format: 'IV::IV::ENCRYPTED_DATA'\n" +
+                "2. JSON format: {iv: '...', data: '...'}\n" +
+                "3. Structured format with IV and ENCRYPTED DATA sections"
+            );
         }
         
-        // Check if we have the IV
-        if (!encryptedDataObj.iv) {
-            if (manualIV) {
-                // Use manually provided IV
-                encryptedDataObj.iv = manualIV;
-            } else {
-                // Show IV input field
-                showIVInput();
-                throw new Error("IV is required. Please enter it in the field above.");
-            }
-        }
-        
-        // Validate required fields
+        // Validate we have both data and IV
         if (!encryptedDataObj.data || !encryptedDataObj.iv) {
-            showIVInput();
-            throw new Error("Missing encrypted data or IV. Please check your input.");
+            throw new Error("Missing encrypted data or IV. Please ensure both are provided.");
         }
         
         // Generate key from password
@@ -623,11 +505,6 @@ async function decryptText() {
         // Convert to text
         const decryptedText = new TextDecoder().decode(decryptedData);
         
-        // Hide IV input if it was visible
-        if (ivInputDiv && ivInputDiv.style.display === 'block') {
-            hideIVInput();
-        }
-        
         // Format and display result
         if (resultDiv) {
             const formattedResult = `
@@ -636,6 +513,10 @@ async function decryptText() {
         <i class="fas fa-unlock"></i> Decrypted Text
     </div>
     <div class="result-grid">
+        <div class="result-item">
+            <span class="result-label">Data Format:</span>
+            <span class="result-value">${encryptedDataObj.format || 'unknown'}</span>
+        </div>
         <div class="result-item">
             <span class="result-label">Algorithm:</span>
             <span class="result-value">${encryptedDataObj.algorithm || 'AES-GCM'}</span>
@@ -649,11 +530,12 @@ async function decryptText() {
             <div class="decrypted-message">${decryptedText}</div>
         </div>
         <div class="result-item full-width">
-            <span class="result-label">Export Format:</span>
+            <span class="result-label">Decryption Successful:</span>
             <textarea readonly class="full-data export-textarea">🔓 DECRYPTED MESSAGE 🔓
             
 TIMESTAMP: ${new Date().toLocaleString()}
 ALGORITHM: ${encryptedDataObj.algorithm || 'AES-GCM'}
+FORMAT: ${encryptedDataObj.format || 'unknown'}
 
 DECRYPTED TEXT:
 =====================
@@ -662,9 +544,6 @@ ${decryptedText}
 =====================
 ✅ Decryption successful
 🔓 END OF DECRYPTED MESSAGE 🔓</textarea>
-            <div class="export-format-label">
-                <i class="fas fa-info-circle"></i> Copy-friendly format for sharing decrypted content
-            </div>
         </div>
     </div>
 </div>`;
@@ -681,15 +560,12 @@ ${decryptedText}
     } catch (error) {
         console.error("Decryption error:", error);
         
-        // Don't show error if we're just showing the IV input
-        if (!missingIV) {
-            if (resultDiv) {
-                resultDiv.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-triangle"></i> Error: ${error.message}</div>`;
-            }
-            if (statusDiv) {
-                statusDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> <span>❌ Decryption failed - ${error.message}</span>';
-                statusDiv.className = 'status-bar status-error';
-            }
+        if (resultDiv) {
+            resultDiv.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-triangle"></i> Error: ${error.message}</div>`;
+        }
+        if (statusDiv) {
+            statusDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> <span>❌ ${error.message}</span>';
+            statusDiv.className = 'status-bar status-error';
         }
     }
 }
@@ -749,21 +625,12 @@ function clearAll() {
         keyStrength.className = "key-strength";
     }
     
-    // Clear and hide IV input
-    if (ivInputField) {
-        ivInputField.value = "";
-    }
-    if (ivInputDiv) {
-        ivInputDiv.style.display = 'none';
-    }
-    
     const toggleBtn = document.querySelector('.toggle-key-btn');
     if (toggleBtn) {
         toggleBtn.innerHTML = '<i class="fas fa-eye"></i>';
     }
     
     currentEncryptedData = null;
-    missingIV = false;
 }
 
 // Export functions to global scope
@@ -773,8 +640,5 @@ window.decryptText = decryptText;
 window.clearAll = clearAll;
 window.copyResult = copyResult;
 window.toggleKeyVisibility = toggleKeyVisibility;
-window.showIVInput = showIVInput;
-window.hideIVInput = hideIVInput;
-window.useLastIV = useLastIV;
 
 console.log("=== ENCRYPTION APP LOADED ===");
