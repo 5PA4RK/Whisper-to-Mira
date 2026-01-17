@@ -4,7 +4,6 @@ console.log("=== ENCRYPTION APP STARTING ===");
 // Global variables
 let currentEncryptedData = null;
 let isKeyVisible = false; // Track key visibility
-let isEncryptionMode = true; // Track if we're in encryption or decryption mode
 
 // DOM Elements
 let inputText, encryptionKey, resultDiv, statusDiv, toggleKeyBtn, keyStrength;
@@ -19,22 +18,17 @@ document.addEventListener('DOMContentLoaded', function() {
     resultDiv = document.getElementById('result');
     statusDiv = document.getElementById('status');
     keyStrength = document.getElementById('keyStrength');
-    toggleKeyBtn = document.querySelector('.toggle-key-btn');
     
     console.log("Elements found:", {
         inputText: !!inputText,
         encryptionKey: !!encryptionKey,
         resultDiv: !!resultDiv,
         statusDiv: !!statusDiv,
-        keyStrength: !!keyStrength,
-        toggleKeyBtn: !!toggleKeyBtn
+        keyStrength: !!keyStrength
     });
     
     // Set initial values
-    if (inputText) {
-        inputText.value = "";
-        inputText.placeholder = "Enter text to encrypt...";
-    }
+    if (inputText) inputText.value = "";
     if (encryptionKey) {
         encryptionKey.value = "";
         encryptionKey.type = 'password'; // Hide key by default
@@ -44,21 +38,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update key strength on input
     if (encryptionKey) {
         encryptionKey.addEventListener('input', updateKeyStrengthDisplay);
-    }
-    
-    // Setup toggle key button
-    if (toggleKeyBtn) {
-        toggleKeyBtn.addEventListener('click', toggleKeyVisibility);
-    }
-    
-    // Clear currentEncryptedData when user starts typing new text
-    if (inputText) {
-        inputText.addEventListener('input', function() {
-            // Only clear if we're switching modes
-            if (isEncryptionMode) {
-                currentEncryptedData = null;
-            }
-        });
     }
     
     console.log("App initialized successfully!");
@@ -72,15 +51,6 @@ function generateKey() {
         if (!encryptionKey) {
             alert("Error: Encryption key element not found!");
             return;
-        }
-        
-        // Reset state for new encryption
-        isEncryptionMode = true;
-        currentEncryptedData = null;
-        
-        // Update input placeholder for encryption mode
-        if (inputText) {
-            inputText.placeholder = "Enter text to encrypt...";
         }
         
         // Generate random bytes
@@ -132,7 +102,7 @@ function updateKeyStrengthDisplay() {
         className = "key-strong";
     } else if (key.length >= 8) {
         strength = "Medium";
-        className = "key-good";
+        className = "key-good"; // Changed from "key-medium" to match CSS
     } else if (key.length >= 4) {
         strength = "Weak";
         className = "key-weak";
@@ -178,12 +148,6 @@ async function encryptText() {
             alert("Please enter an encryption key");
             return;
         }
-        
-        // Set encryption mode
-        isEncryptionMode = true;
-        
-        // Clear previous encrypted data
-        currentEncryptedData = null;
         
         // Update UI
         if (resultDiv) {
@@ -358,42 +322,24 @@ async function decryptText() {
             return;
         }
         
-        // Set decryption mode
-        isEncryptionMode = false;
-        
-        // Update input placeholder for decryption mode
-        if (inputText) {
-            inputText.placeholder = "Paste encrypted JSON data here or leave empty to use previous result...";
-        }
-        
-        // Get text from input
-        const inputTextValue = inputText ? inputText.value.trim() : "";
-        let dataToDecrypt = currentEncryptedData;
-        
-        // Check if we have new data in input
-        if (inputTextValue) {
+        // Check if we have encrypted data
+        if (!currentEncryptedData) {
+            const inputTextValue = inputText ? inputText.value.trim() : "";
+            if (!inputTextValue) {
+                alert("No encrypted data available. Encrypt something first or paste encrypted data.");
+                return;
+            }
+            
+            // Try to parse encrypted data from input
             try {
-                // Try to parse as JSON
-                const parsedData = JSON.parse(inputTextValue);
-                if (parsedData.data && parsedData.iv) {
-                    dataToDecrypt = parsedData;
-                    console.log("Using data from input field");
-                } else {
+                currentEncryptedData = JSON.parse(inputTextValue);
+                if (!currentEncryptedData.data || !currentEncryptedData.iv) {
                     throw new Error("Invalid encrypted data format");
                 }
             } catch (e) {
-                // If not JSON, check if it's encrypted data from previous result
-                if (!currentEncryptedData) {
-                    alert("No valid encrypted data found. Please paste valid JSON data or encrypt something first.");
-                    return;
-                }
-                // Use existing data
-                console.log("Input is not JSON, using existing encrypted data");
+                alert("No valid encrypted data found. Please encrypt something first.");
+                return;
             }
-        } else if (!dataToDecrypt) {
-            // No input and no stored data
-            alert("No encrypted data available. Please paste encrypted JSON data in the input field or encrypt something first.");
-            return;
         }
         
         // Update UI
@@ -428,8 +374,8 @@ async function decryptText() {
         );
         
         // Convert from base64
-        const iv = new Uint8Array(atob(dataToDecrypt.iv).split('').map(c => c.charCodeAt(0)));
-        const encryptedData = new Uint8Array(atob(dataToDecrypt.data).split('').map(c => c.charCodeAt(0)));
+        const iv = new Uint8Array(atob(currentEncryptedData.iv).split('').map(c => c.charCodeAt(0)));
+        const encryptedData = new Uint8Array(atob(currentEncryptedData.data).split('').map(c => c.charCodeAt(0)));
         
         // Decrypt
         const decryptedData = await crypto.subtle.decrypt(
@@ -444,11 +390,6 @@ async function decryptText() {
         // Convert to text
         const decryptedText = new TextDecoder().decode(decryptedData);
         
-        // Store the data that was just decrypted (but don't override if we parsed new data)
-        if (!inputTextValue || !dataToDecrypt.timestamp) {
-            currentEncryptedData = dataToDecrypt;
-        }
-        
         // Format and display result
         if (resultDiv) {
             const formattedResult = `
@@ -459,11 +400,11 @@ async function decryptText() {
     <div class="result-grid">
         <div class="result-item">
             <span class="result-label">Algorithm:</span>
-            <span class="result-value">${dataToDecrypt.algorithm || 'AES-GCM'}</span>
+            <span class="result-value">${currentEncryptedData.algorithm || 'AES-GCM'}</span>
         </div>
         <div class="result-item">
             <span class="result-label">Timestamp:</span>
-            <span class="result-value">${dataToDecrypt.timestamp ? new Date(dataToDecrypt.timestamp).toLocaleString() : 'Unknown'}</span>
+            <span class="result-value">${currentEncryptedData.timestamp ? new Date(currentEncryptedData.timestamp).toLocaleString() : 'Unknown'}</span>
         </div>
         <div class="result-item full-width">
             <span class="result-label">Decrypted Message:</span>
@@ -474,7 +415,7 @@ async function decryptText() {
             <textarea readonly class="full-data export-textarea">🔓 DECRYPTED MESSAGE 🔓
             
 TIMESTAMP: ${new Date().toLocaleString()}
-ALGORITHM: ${dataToDecrypt.algorithm || 'AES-GCM'}
+ALGORITHM: ${currentEncryptedData.algorithm || 'AES-GCM'}
 
 DECRYPTED TEXT:
 =====================
@@ -502,13 +443,8 @@ ${decryptedText}
     } catch (error) {
         console.error("Decryption error:", error);
         
-        // Clear invalid encrypted data
-        if (inputText && inputText.value.trim()) {
-            currentEncryptedData = null;
-        }
-        
         if (resultDiv) {
-            resultDiv.innerHTML = '<div class="error-message"><i class="fas fa-exclamation-triangle"></i> Error: Decryption failed. Please check your encryption key and data format.</div>';
+            resultDiv.innerHTML = '<div class="error-message"><i class="fas fa-exclamation-triangle"></i> Error: Decryption failed. Please check your encryption key.</div>';
         }
         if (statusDiv) {
             statusDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> <span>❌ Decryption failed - Wrong key or corrupted data</span>';
@@ -554,10 +490,7 @@ function copyResult() {
 function clearAll() {
     console.log("Clearing all...");
     
-    if (inputText) {
-        inputText.value = "";
-        inputText.placeholder = "Enter text to encrypt...";
-    }
+    if (inputText) inputText.value = "";
     if (encryptionKey) {
         encryptionKey.value = "";
         encryptionKey.type = 'password';
@@ -580,21 +513,7 @@ function clearAll() {
         toggleBtn.innerHTML = '<i class="fas fa-eye"></i>';
     }
     
-    // Reset state
     currentEncryptedData = null;
-    isEncryptionMode = true;
-    
-    console.log("All cleared, state reset");
-}
-
-// Validate JSON input for decryption
-function validateEncryptedData(input) {
-    try {
-        const data = JSON.parse(input);
-        return data && typeof data === 'object' && data.data && data.iv;
-    } catch (e) {
-        return false;
-    }
 }
 
 // Export functions to global scope
@@ -604,6 +523,5 @@ window.decryptText = decryptText;
 window.clearAll = clearAll;
 window.copyResult = copyResult;
 window.toggleKeyVisibility = toggleKeyVisibility;
-window.validateEncryptedData = validateEncryptedData;
 
 console.log("=== ENCRYPTION APP LOADED ===");
