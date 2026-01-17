@@ -307,7 +307,7 @@ async function encryptText() {
         };
         
         // Create nicely formatted export text with multiple formats
-        const exportText = `🔐 SECURE ENCRYPTION EXPORT 🔐
+        const exportText = `SECURE ENCRYPTION EXPORT
         
 ENCRYPTION DETAILS:
 =====================
@@ -315,7 +315,7 @@ Algorithm: ${currentEncryptedData.algorithm}
 Timestamp: ${new Date(currentEncryptedData.timestamp).toLocaleString()}
 Key Strength: ${getKeyStrength(keyString)}
 
-📱 MOBILE-FRIENDLY FORMAT (Copy this for easy decryption):
+MOBILE-FRIENDLY FORMAT (Copy this for easy decryption):
 =====================
 ${combinedString}
 
@@ -331,13 +331,13 @@ FULL JSON DATA:
 =====================
 ${JSON.stringify(currentEncryptedData, null, 2)}
 
-🔐 END OF ENCRYPTED DATA 🔐
+END OF ENCRYPTED DATA
 
 ⚠️ IMPORTANT NOTES:
-- For easy decryption, use the "MOBILE-FRIENDLY FORMAT"
-- The IV is included with the encrypted data
+- Encryption made for Mira
+- The IV is included with the encrypted data (Ok to share)
 - Store the encryption key separately
-- This export does NOT contain the encryption key`;
+- This export does NOT contain the encryption key (Never share)`;
 
         // Format and display result
         if (resultDiv) {
@@ -531,7 +531,7 @@ async function decryptText() {
         </div>
         <div class="result-item full-width">
             <span class="result-label">Decryption Successful:</span>
-            <textarea readonly class="full-data export-textarea">🔓 DECRYPTED MESSAGE 🔓
+            <textarea readonly class="full-data export-textarea">DECRYPTED MESSAGE
             
 TIMESTAMP: ${new Date().toLocaleString()}
 ALGORITHM: ${encryptedDataObj.algorithm || 'AES-GCM'}
@@ -543,7 +543,7 @@ ${decryptedText}
 
 =====================
 ✅ Decryption successful
-🔓 END OF DECRYPTED MESSAGE 🔓</textarea>
+END OF DECRYPTED MESSAGE</textarea>
         </div>
     </div>
 </div>`;
