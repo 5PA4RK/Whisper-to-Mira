@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set initial values
     if (inputText) {
         inputText.value = "";
-        inputText.placeholder = "Enter text to encrypt OR encrypted data to decrypt (base64 or JSON format)...";
+        inputText.placeholder = "Enter text to encrypt decrypt";
     }
     if (encryptionKey) {
         encryptionKey.value = "";
