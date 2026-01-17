@@ -28,7 +28,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Set initial values
-    if (inputText) inputText.value = "";
+    if (inputText) {
+        inputText.value = "";
+        inputText.placeholder = "Enter text to encrypt OR encrypted data to decrypt (base64 or JSON format)...";
+    }
     if (encryptionKey) {
         encryptionKey.value = "";
         encryptionKey.type = 'password'; // Hide key by default
@@ -128,6 +131,93 @@ function toggleKeyVisibility() {
             '<i class="fas fa-eye-slash"></i>' : 
             '<i class="fas fa-eye"></i>';
     }
+}
+
+// NEW: Helper function to parse encrypted data from various formats
+function parseEncryptedData(input) {
+    console.log("Parsing encrypted data...");
+    
+    const trimmedInput = input.trim();
+    
+    // Try to parse as JSON first
+    if (trimmedInput.startsWith('{') || trimmedInput.startsWith('[')) {
+        try {
+            const parsed = JSON.parse(trimmedInput);
+            console.log("Detected JSON format");
+            return parsed;
+        } catch (e) {
+            console.log("Not valid JSON, trying other formats");
+        }
+    }
+    
+    // Check if it looks like a structured export format (with IV and data sections)
+    const lines = trimmedInput.split('\n');
+    let encryptedData = null;
+    let iv = null;
+    let algorithm = "AES-GCM-256";
+    
+    // Parse the structured export format
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        
+        if (line.startsWith('ENCRYPTED DATA:')) {
+            // Next line(s) should contain the encrypted data
+            encryptedData = lines[i + 1] ? lines[i + 1].trim() : null;
+        }
+        
+        if (line.startsWith('INITIALIZATION VECTOR (IV):')) {
+            // Next line(s) should contain the IV
+            iv = lines[i + 1] ? lines[i + 1].trim() : null;
+        }
+        
+        if (line.startsWith('Algorithm:')) {
+            algorithm = line.split(':')[1].trim();
+        }
+    }
+    
+    // If we found both encrypted data and IV in the structured format
+    if (encryptedData && iv) {
+        console.log("Detected structured export format");
+        return {
+            data: encryptedData,
+            iv: iv,
+            algorithm: algorithm,
+            timestamp: new Date().toISOString()
+        };
+    }
+    
+    // Check if it's just a single base64 string (might be encrypted data only)
+    // In this case, we'll need to ask for IV separately or use a default
+    if (trimmedInput.length > 20 && /^[A-Za-z0-9+/=]+$/.test(trimmedInput)) {
+        console.log("Detected base64 data, assuming it's encrypted data only");
+        return {
+            data: trimmedInput,
+            iv: null, // IV will need to be provided separately
+            algorithm: "AES-GCM-256",
+            timestamp: new Date().toISOString()
+        };
+    }
+    
+    return null;
+}
+
+// NEW: Helper function to get IV from user if needed
+async function getMissingIV() {
+    // If IV is missing, prompt user for it
+    return new Promise((resolve) => {
+        const iv = prompt(
+            "IV (Initialization Vector) not found.\n\n" +
+            "Please enter the IV (base64 format) that was generated during encryption:\n\n" +
+            "The IV is usually a base64 string like 'XxYyZz1234567890'.\n" +
+            "If you encrypted with this app, check the 'INITIALIZATION VECTOR (IV):' section in the output."
+        );
+        
+        if (iv && iv.trim()) {
+            resolve(iv.trim());
+        } else {
+            resolve(null);
+        }
+    });
 }
 
 // Encrypt text
@@ -322,24 +412,12 @@ async function decryptText() {
             return;
         }
         
-        // Check if we have encrypted data
-        if (!currentEncryptedData) {
-            const inputTextValue = inputText ? inputText.value.trim() : "";
-            if (!inputTextValue) {
-                alert("No encrypted data available. Encrypt something first or paste encrypted data.");
-                return;
-            }
-            
-            // Try to parse encrypted data from input
-            try {
-                currentEncryptedData = JSON.parse(inputTextValue);
-                if (!currentEncryptedData.data || !currentEncryptedData.iv) {
-                    throw new Error("Invalid encrypted data format");
-                }
-            } catch (e) {
-                alert("No valid encrypted data found. Please encrypt something first.");
-                return;
-            }
+        // Get input text
+        const inputTextValue = inputText ? inputText.value.trim() : "";
+        
+        if (!inputTextValue) {
+            alert("Please enter encrypted data to decrypt");
+            return;
         }
         
         // Update UI
@@ -349,6 +427,54 @@ async function decryptText() {
         if (statusDiv) {
             statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>⏳ Decrypting...</span>';
             statusDiv.className = 'status-bar status-info';
+        }
+        
+        // Parse the encrypted data
+        let encryptedDataObj = null;
+        
+        // Check if we have currentEncryptedData from a previous encryption
+        if (currentEncryptedData) {
+            console.log("Using currently stored encrypted data");
+            encryptedDataObj = currentEncryptedData;
+        } else {
+            // Try to parse the input
+            encryptedDataObj = parseEncryptedData(inputTextValue);
+            
+            // If parsing failed and input looks like a simple string, ask user what format it is
+            if (!encryptedDataObj) {
+                const userChoice = confirm(
+                    "Could not automatically detect the format.\n\n" +
+                    "Please select:\n" +
+                    "• OK if you have ONLY the encrypted data (base64)\n" +
+                    "• Cancel if you have the full JSON or structured format"
+                );
+                
+                if (userChoice) {
+                    // User has only encrypted data
+                    encryptedDataObj = {
+                        data: inputTextValue,
+                        iv: null,
+                        algorithm: "AES-GCM-256",
+                        timestamp: new Date().toISOString()
+                    };
+                } else {
+                    throw new Error("Please use the full JSON format or the structured export format from the encryption output.");
+                }
+            }
+        }
+        
+        // Check if we have the IV
+        if (!encryptedDataObj.iv) {
+            const iv = await getMissingIV();
+            if (!iv) {
+                throw new Error("IV is required for decryption. Please provide the IV.");
+            }
+            encryptedDataObj.iv = iv;
+        }
+        
+        // Validate required fields
+        if (!encryptedDataObj.data || !encryptedDataObj.iv) {
+            throw new Error("Missing encrypted data or IV. Please provide both.");
         }
         
         // Generate key from password
@@ -374,8 +500,8 @@ async function decryptText() {
         );
         
         // Convert from base64
-        const iv = new Uint8Array(atob(currentEncryptedData.iv).split('').map(c => c.charCodeAt(0)));
-        const encryptedData = new Uint8Array(atob(currentEncryptedData.data).split('').map(c => c.charCodeAt(0)));
+        const iv = new Uint8Array(atob(encryptedDataObj.iv).split('').map(c => c.charCodeAt(0)));
+        const encryptedData = new Uint8Array(atob(encryptedDataObj.data).split('').map(c => c.charCodeAt(0)));
         
         // Decrypt
         const decryptedData = await crypto.subtle.decrypt(
@@ -400,11 +526,11 @@ async function decryptText() {
     <div class="result-grid">
         <div class="result-item">
             <span class="result-label">Algorithm:</span>
-            <span class="result-value">${currentEncryptedData.algorithm || 'AES-GCM'}</span>
+            <span class="result-value">${encryptedDataObj.algorithm || 'AES-GCM'}</span>
         </div>
         <div class="result-item">
             <span class="result-label">Timestamp:</span>
-            <span class="result-value">${currentEncryptedData.timestamp ? new Date(currentEncryptedData.timestamp).toLocaleString() : 'Unknown'}</span>
+            <span class="result-value">${encryptedDataObj.timestamp ? new Date(encryptedDataObj.timestamp).toLocaleString() : 'Unknown'}</span>
         </div>
         <div class="result-item full-width">
             <span class="result-label">Decrypted Message:</span>
@@ -415,7 +541,7 @@ async function decryptText() {
             <textarea readonly class="full-data export-textarea">🔓 DECRYPTED MESSAGE 🔓
             
 TIMESTAMP: ${new Date().toLocaleString()}
-ALGORITHM: ${currentEncryptedData.algorithm || 'AES-GCM'}
+ALGORITHM: ${encryptedDataObj.algorithm || 'AES-GCM'}
 
 DECRYPTED TEXT:
 =====================
@@ -444,10 +570,10 @@ ${decryptedText}
         console.error("Decryption error:", error);
         
         if (resultDiv) {
-            resultDiv.innerHTML = '<div class="error-message"><i class="fas fa-exclamation-triangle"></i> Error: Decryption failed. Please check your encryption key.</div>';
+            resultDiv.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-triangle"></i> Error: ${error.message}</div>`;
         }
         if (statusDiv) {
-            statusDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> <span>❌ Decryption failed - Wrong key or corrupted data</span>';
+            statusDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> <span>❌ Decryption failed - ${error.message}</span>';
             statusDiv.className = 'status-bar status-error';
         }
     }
