@@ -716,3 +716,90 @@ textarea.form-input {
         padding: var(--regular-spacing-sm);
     }
 }
+/* ===== IV INPUT STYLES ===== */
+#ivInputContainer {
+    background-color: rgba(239, 68, 68, 0.05);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-md);
+    margin-top: var(--spacing-sm);
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.iv-buttons {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-sm);
+}
+
+.btn-small {
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+.btn-small i {
+    font-size: 12px;
+}
+
+/* Make sure the IV input is visible on mobile */
+@media (max-width: 768px) {
+    #ivInputContainer {
+        padding: var(--regular-spacing-md);
+    }
+    
+    .iv-buttons {
+        flex-direction: column;
+    }
+    
+    .btn-small {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Highlight the IV field when it's required */
+#ivInputContainer .form-label {
+    color: var(--warning-color);
+    font-weight: 600;
+}
+
+#ivInputContainer .form-label i {
+    color: var(--warning-color);
+}
+
+#ivInputContainer .key-hint {
+    color: var(--warning-color);
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 480px) {
+    #ivInputContainer {
+        margin: var(--regular-spacing-sm) 0;
+        padding: var(--regular-spacing-sm);
+    }
+    
+    #ivInput {
+        font-size: 14px; /* Larger font for mobile */
+        padding: 12px; /* More padding for touch */
+    }
+    
+    .iv-buttons {
+        flex-direction: column;
+    }
+    
+    .btn-small {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+}
