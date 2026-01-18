@@ -1,19 +1,18 @@
-// Secure Encryption App - Main JavaScript
+
 console.log("=== ENCRYPTION APP STARTING ===");
 
-// Global variables
-let currentEncryptedData = null;
-let isKeyVisible = false; // Track key visibility
-const IV_SEPARATOR = '::IV::'; // Unique separator for IV and encrypted data
 
-// DOM Elements
+let currentEncryptedData = null;
+let isKeyVisible = false; 
+const IV_SEPARATOR = '::IV::'; 
+
 let inputText, encryptionKey, resultDiv, statusDiv, toggleKeyBtn, keyStrength;
 
-// Initialize when page loads
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log("DOM loaded, getting elements...");
     
-    // Get DOM elements
+
     inputText = document.getElementById('inputText');
     encryptionKey = document.getElementById('encryptionKey');
     resultDiv = document.getElementById('result');
@@ -28,18 +27,18 @@ document.addEventListener('DOMContentLoaded', function() {
         keyStrength: !!keyStrength
     });
     
-    // Set initial values
+
     if (inputText) {
         inputText.value = "";
         inputText.placeholder = "For encryption: Enter text to encrypt\nFor decryption: Paste encrypted data (any format)";
     }
     if (encryptionKey) {
         encryptionKey.value = "";
-        encryptionKey.type = 'password'; // Hide key by default
+        encryptionKey.type = 'password'; 
     }
     if (statusDiv) statusDiv.textContent = "✅ App ready! Click 'Generate Key' or 'Encrypt' to start.";
     
-    // Update key strength on input
+
     if (encryptionKey) {
         encryptionKey.addEventListener('input', updateKeyStrengthDisplay);
     }
@@ -47,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log("App initialized successfully!");
 });
 
-// Generate a secure random key
+
 function generateKey() {
     console.log("Generating key...");
     
@@ -57,23 +56,23 @@ function generateKey() {
             return;
         }
         
-        // Generate random bytes
-        const array = new Uint8Array(24); // Increased length for stronger key
+
+        const array = new Uint8Array(24);
         window.crypto.getRandomValues(array);
         
-        // Convert to base64 URL-safe format
+
         const key = btoa(String.fromCharCode.apply(null, array))
             .replace(/\+/g, '-')
             .replace(/\//g, '_')
             .replace(/=+$/, '');
         
-        // Set the key
+
         encryptionKey.value = key;
         
-        // Update key strength display
+
         updateKeyStrengthDisplay();
         
-        // Update status
+
         if (statusDiv) {
             statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> <span>✅ Secure key generated!</span>';
             statusDiv.className = 'status-bar status-success';
@@ -90,7 +89,7 @@ function generateKey() {
     }
 }
 
-// Update key strength display
+
 function updateKeyStrengthDisplay() {
     if (!keyStrength || !encryptionKey) return;
     
@@ -106,7 +105,7 @@ function updateKeyStrengthDisplay() {
         className = "key-strong";
     } else if (key.length >= 8) {
         strength = "Medium";
-        className = "key-good"; // Changed from "key-medium" to match CSS
+        className = "key-good"; 
     } else if (key.length >= 4) {
         strength = "Weak";
         className = "key-weak";
@@ -119,7 +118,7 @@ function updateKeyStrengthDisplay() {
     keyStrength.className = `key-strength ${className}`;
 }
 
-// Toggle key visibility
+
 function toggleKeyVisibility() {
     if (!encryptionKey) return;
     
@@ -134,12 +133,12 @@ function toggleKeyVisibility() {
     }
 }
 
-// NEW: Combine IV and encrypted data into a single string
+
 function combineIVandData(ivBase64, dataBase64) {
     return ivBase64 + IV_SEPARATOR + dataBase64;
 }
 
-// NEW: Split combined string back into IV and data
+
 function splitIVandData(combinedString) {
     const parts = combinedString.split(IV_SEPARATOR);
     if (parts.length === 2) {
@@ -151,13 +150,13 @@ function splitIVandData(combinedString) {
     return null;
 }
 
-// NEW: Parse encrypted data from various formats
+
 function parseEncryptedData(input) {
     console.log("Parsing encrypted data...");
     
     const trimmedInput = input.trim();
     
-    // 1. Check if it's our combined format (IV::IV::ENCRYPTED_DATA)
+
     const splitData = splitIVandData(trimmedInput);
     if (splitData) {
         console.log("Detected combined IV+Data format");
@@ -170,7 +169,7 @@ function parseEncryptedData(input) {
         };
     }
     
-    // 2. Try to parse as JSON
+
     if (trimmedInput.startsWith('{') || trimmedInput.startsWith('[')) {
         try {
             const parsed = JSON.parse(trimmedInput);
@@ -183,7 +182,7 @@ function parseEncryptedData(input) {
         }
     }
     
-    // 3. Check for structured export format
+
     const lines = trimmedInput.split('\n');
     let encryptedData = null;
     let iv = null;
@@ -216,7 +215,7 @@ function parseEncryptedData(input) {
         };
     }
     
-    // 4. If it's just base64, assume it might be combined format without separator
+
     if (trimmedInput.length > 20 && /^[A-Za-z0-9+/=]+$/.test(trimmedInput)) {
         console.log("Detected base64 only, but no IV found");
         return null;
@@ -225,16 +224,16 @@ function parseEncryptedData(input) {
     return null;
 }
 
-// Encrypt text
+
 async function encryptText() {
     console.log("Starting encryption...");
     
     try {
-        // Get values
+
         const text = inputText ? inputText.value.trim() : "";
         const keyString = encryptionKey ? encryptionKey.value.trim() : "";
         
-        // Validate
+
         if (!text) {
             alert("Please enter text to encrypt");
             return;
@@ -244,7 +243,7 @@ async function encryptText() {
             return;
         }
         
-        // Update UI
+ 
         if (resultDiv) {
             resultDiv.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Encrypting...</div>';
         }
@@ -253,7 +252,7 @@ async function encryptText() {
             statusDiv.className = 'status-bar status-info';
         }
         
-        // Generate key from password
+
         const baseKey = await crypto.subtle.importKey(
             "raw",
             new TextEncoder().encode(keyString),
@@ -262,7 +261,7 @@ async function encryptText() {
             ["deriveKey"]
         );
         
-        // Derive encryption key
+
         const key = await crypto.subtle.deriveKey(
             {
                 name: "PBKDF2",
@@ -276,10 +275,10 @@ async function encryptText() {
             ["encrypt", "decrypt"]
         );
         
-        // Generate IV
+
         const iv = crypto.getRandomValues(new Uint8Array(12));
         
-        // Encrypt
+
         const encryptedData = await crypto.subtle.encrypt(
             {
                 name: "AES-GCM",
@@ -289,24 +288,24 @@ async function encryptText() {
             new TextEncoder().encode(text)
         );
         
-        // Convert to base64
+
         const encryptedBytes = new Uint8Array(encryptedData);
         const encryptedBase64 = btoa(String.fromCharCode.apply(null, encryptedBytes));
         const ivBase64 = btoa(String.fromCharCode.apply(null, iv));
         
-        // Create combined string (IV + encrypted data)
+
         const combinedString = combineIVandData(ivBase64, encryptedBase64);
         
-        // Store for later use
+
         currentEncryptedData = {
             iv: ivBase64,
             data: encryptedBase64,
-            combined: combinedString, // NEW: Store combined format
+            combined: combinedString, 
             algorithm: "AES-GCM-256",
             timestamp: new Date().toISOString()
         };
         
-        // Create nicely formatted export text with multiple formats
+
         const exportText = `SECURE ENCRYPTION EXPORT
         
 ENCRYPTION DETAILS:
@@ -339,7 +338,7 @@ END OF ENCRYPTED DATA
 - Store the encryption key separately
 - This export does NOT contain the encryption key (Never share)`;
 
-        // Format and display result
+
         if (resultDiv) {
             const formattedResult = `
 <div class="encrypted-result">
@@ -406,7 +405,7 @@ END OF ENCRYPTED DATA
     }
 }
 
-// Helper function to get key strength text
+
 function getKeyStrength(key) {
     if (!key) return "None";
     if (key.length >= 16) return "Strong";
@@ -415,12 +414,12 @@ function getKeyStrength(key) {
     return "Too Short";
 }
 
-// Decrypt text
+
 async function decryptText() {
     console.log("Starting decryption...");
     
     try {
-        // Get key
+
         const keyString = encryptionKey ? encryptionKey.value.trim() : "";
         
         if (!keyString) {
@@ -428,7 +427,7 @@ async function decryptText() {
             return;
         }
         
-        // Get input text
+  
         const inputTextValue = inputText ? inputText.value.trim() : "";
         
         if (!inputTextValue) {
@@ -436,7 +435,7 @@ async function decryptText() {
             return;
         }
         
-        // Update UI
+
         if (resultDiv) {
             resultDiv.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Decrypting...</div>';
         }
@@ -445,13 +444,13 @@ async function decryptText() {
             statusDiv.className = 'status-bar status-info';
         }
         
-        // Parse the encrypted data
+
         let encryptedDataObj = null;
         
-        // First, try to parse the input
+
         encryptedDataObj = parseEncryptedData(inputTextValue);
         
-        // If parsing failed, provide helpful error
+
         if (!encryptedDataObj) {
             throw new Error(
                 "Could not parse encrypted data. Please use one of these formats:\n\n" +
@@ -461,12 +460,12 @@ async function decryptText() {
             );
         }
         
-        // Validate we have both data and IV
+
         if (!encryptedDataObj.data || !encryptedDataObj.iv) {
             throw new Error("Missing encrypted data or IV. Please ensure both are provided.");
         }
         
-        // Generate key from password
+
         const baseKey = await crypto.subtle.importKey(
             "raw",
             new TextEncoder().encode(keyString),
@@ -488,11 +487,11 @@ async function decryptText() {
             ["encrypt", "decrypt"]
         );
         
-        // Convert from base64
+
         const iv = new Uint8Array(atob(encryptedDataObj.iv).split('').map(c => c.charCodeAt(0)));
         const encryptedData = new Uint8Array(atob(encryptedDataObj.data).split('').map(c => c.charCodeAt(0)));
         
-        // Decrypt
+
         const decryptedData = await crypto.subtle.decrypt(
             {
                 name: "AES-GCM",
@@ -502,10 +501,10 @@ async function decryptText() {
             encryptedData
         );
         
-        // Convert to text
+
         const decryptedText = new TextDecoder().decode(decryptedData);
         
-        // Format and display result
+
         if (resultDiv) {
             const formattedResult = `
 <div class="decrypted-result">
@@ -570,7 +569,6 @@ END OF DECRYPTED MESSAGE</textarea>
     }
 }
 
-// Copy result to clipboard
 function copyResult() {
     if (!resultDiv) return;
     
@@ -603,7 +601,7 @@ function copyResult() {
     });
 }
 
-// Clear all fields
+
 function clearAll() {
     console.log("Clearing all...");
     
@@ -633,7 +631,7 @@ function clearAll() {
     currentEncryptedData = null;
 }
 
-// Export functions to global scope
+
 window.generateKey = generateKey;
 window.encryptText = encryptText;
 window.decryptText = decryptText;
