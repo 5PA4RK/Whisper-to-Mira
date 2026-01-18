@@ -111,12 +111,9 @@
         </main>
     </div>
 
-    <!-- Load existing JavaScript -->
     <script src="app.js"></script>
     
-    <!-- Initialize app and provide fallback -->
     <script>
-        // Initialize app when page loads
         document.addEventListener('DOMContentLoaded', function() {
             initializeApp();
         });
@@ -127,20 +124,16 @@
             const result = document.getElementById('result');
             const status = document.getElementById('status');
             
-            // Clear input fields
             if (inputText) inputText.value = "";
             
-            // Generate and set secure key
             if (encryptionKey) {
                 const randomKey = "";
                 encryptionKey.value = randomKey;
                 updateKeyStrength(randomKey);
             }
             
-            // Clear result field
             if (result) result.textContent = "Results will appear here after encryption or decryption...";
             
-            // Update status
             if (status) {
                 status.innerHTML = '<i class="fas fa-check-circle"></i> <span>App initialized. Fields cleared and secure key generated.</span>';
                 status.className = 'status-bar status-success';
@@ -166,7 +159,6 @@
             keyStrength.className = `key-strength ${className}`;
         }
         
-        // Fallback functions if app.js doesn't load
         setTimeout(() => {
             if (typeof window.generateKey !== 'function') {
                 console.log("Setting up fallback functions");
@@ -209,7 +201,6 @@
                     return;
                 }
                 
-                // Simple encryption for demo
                 let encrypted = btoa(encodeURIComponent(input + key));
                 result.textContent = encrypted;
                 
@@ -230,7 +221,6 @@
                 }
                 
                 try {
-                    // Simple decryption for demo
                     let decrypted = decodeURIComponent(atob(input)).replace(key, '');
                     result.textContent = decrypted;
                     
